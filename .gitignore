@@ -45,3 +45,6 @@ prisma/dev.db
 
 # excepción: .env solo tiene valores de desarrollo (sin secretos reales)
 !.env
+
+# documentos de verificación (DNI) — nunca commitear
+uploads/

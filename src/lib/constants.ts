@@ -15,6 +15,14 @@ export const BOOKING_TYPES = {
 } as const;
 export type BookingType = keyof typeof BOOKING_TYPES;
 
+export const VERIFICATION_STATUSES = {
+  SIN_DOCS: "Falta documentación",
+  EN_REVISION: "En revisión",
+  VERIFICADA: "Verificada",
+  RECHAZADA: "Rechazada",
+} as const;
+export type VerificationStatus = keyof typeof VERIFICATION_STATUSES;
+
 export const BOOKING_STATUSES = {
   PENDIENTE: "Pendiente",
   ACEPTADA: "Aceptada",

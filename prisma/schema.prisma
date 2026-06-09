@@ -25,6 +25,18 @@ model User {
 
   workerProfile WorkerProfile?
   bookings      Booking[]      @relation("ClientBookings")
+  addresses     Address[]
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String // "Casa", "Oficina", etc.
+  zone      String
+  street    String // calle y número, piso/depto
+  details   String   @default("") // timbre, indicaciones
+  createdAt DateTime @default(now())
 }
 
 model WorkerProfile {
@@ -36,8 +48,16 @@ model WorkerProfile {
   services        String // JSON array de servicios, ej: ["limpieza","planchado"]
   hourlyRate      Int // ARS por hora
   yearsExperience Int      @default(0)
-  verified        Boolean  @default(false)
-  verifiedAt      DateTime?
+
+  // Verificación: SIN_DOCS | EN_REVISION | VERIFICADA | RECHAZADA
+  verificationStatus String    @default("SIN_DOCS")
+  verificationNote   String    @default("") // motivo de rechazo, visible para la trabajadora
+  dniNumber          String?
+  docFront           String? // nombres de archivo en uploads/ (servidos por /api/docs)
+  docBack            String?
+  selfie             String?
+  verifiedAt         DateTime?
+
   createdAt       DateTime @default(now())
 
   bookings Booking[]

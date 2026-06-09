@@ -4,8 +4,20 @@
   --font-sans: var(--font-geist-sans);
 }
 
+html {
+  /* Mobile-first: letra base más grande en pantallas chicas */
+  font-size: 17px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
 body {
-  background: #fafaf9;
-  color: #1c1917;
+  /* Crema cálido de fondo, look hogareño */
+  background: #faf6f0;
+  color: #292524;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }

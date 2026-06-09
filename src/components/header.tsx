@@ -1,67 +1,45 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { logout } from "@/app/actions/auth";
 import { APP_NAME } from "@/lib/constants";
+import { BottomTabs, DesktopNav, ProfileMenu } from "./nav";
 
 export async function Header() {
   const session = await getSession();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="text-xl font-bold tracking-tight text-emerald-700">
-          {APP_NAME}
-        </Link>
-        <nav className="flex items-center gap-2 text-sm sm:gap-4">
+    <>
+      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
           <Link
-            href="/trabajadoras"
-            className="rounded-lg px-3 py-2 font-medium text-stone-600 hover:bg-stone-100"
+            href="/"
+            className="text-2xl font-extrabold tracking-tight text-emerald-700"
           >
-            Buscar ayuda
+            {APP_NAME}
           </Link>
-          {session ? (
-            <>
-              <Link
-                href="/panel"
-                className="rounded-lg px-3 py-2 font-medium text-stone-600 hover:bg-stone-100"
-              >
-                Mi panel
-              </Link>
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="rounded-lg px-3 py-2 font-medium text-stone-500 hover:bg-stone-100"
-                >
-                  Salir
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/ingresar"
-                className="rounded-lg px-3 py-2 font-medium text-stone-600 hover:bg-stone-100"
-              >
-                Ingresar
-              </Link>
+          <div className="flex items-center gap-3">
+            <DesktopNav session={session} />
+            {session ? (
+              <ProfileMenu session={session} />
+            ) : (
               <Link
                 href="/registro"
-                className="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700"
+                className="rounded-xl bg-emerald-600 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-700"
               >
                 Crear cuenta
               </Link>
-            </>
-          )}
-        </nav>
-      </div>
-    </header>
+            )}
+          </div>
+        </div>
+      </header>
+      <BottomTabs session={session} />
+    </>
   );
 }
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-stone-200 bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-stone-500 sm:flex-row">
+    <footer className="mt-auto hidden border-t border-stone-200 bg-white md:block">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-base text-stone-500 sm:flex-row">
         <span>
           {APP_NAME} · Hecho en Argentina 🇦🇷 · {new Date().getFullYear()}
         </span>

@@ -6,6 +6,8 @@ import { login, register, type FormState } from "@/app/actions/auth";
 import { createBooking } from "@/app/actions/bookings";
 import { createReview } from "@/app/actions/reviews";
 import { updateProfile } from "@/app/actions/profile";
+import { addAddress } from "@/app/actions/addresses";
+import { submitVerification } from "@/app/actions/verification";
 import {
   BOOKING_TYPES,
   SERVICES,
@@ -17,8 +19,10 @@ import {
 } from "@/lib/constants";
 
 const inputClass =
-  "w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900 placeholder-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
-const labelClass = "block text-sm font-medium text-stone-700 mb-1";
+  "w-full h-12 rounded-xl border border-stone-300 bg-white px-4 text-base text-stone-900 placeholder-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
+const textareaClass =
+  "w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 placeholder-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
+const labelClass = "block text-base font-medium text-stone-700 mb-1.5";
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
@@ -26,7 +30,7 @@ function SubmitButton({ children }: { children: React.ReactNode }) {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 font-medium text-white transition hover:bg-emerald-700 disabled:opacity-60"
+      className="w-full min-h-12 rounded-xl bg-emerald-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
     >
       {pending ? "Enviando…" : children}
     </button>
@@ -36,7 +40,7 @@ function SubmitButton({ children }: { children: React.ReactNode }) {
 function ErrorMessage({ state }: { state: FormState }) {
   if (!state.error) return null;
   return (
-    <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{state.error}</p>
+    <p className="rounded-xl bg-rose-50 px-4 py-3 text-base text-rose-700">{state.error}</p>
   );
 }
 
@@ -80,7 +84,7 @@ function WorkerFields({
           required
           defaultValue={defaults?.bio}
           placeholder="Contá tu experiencia, qué te gusta hacer y por qué pueden confiar en vos"
-          className={inputClass}
+          className={textareaClass}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -115,13 +119,13 @@ function WorkerFields({
         <legend className={labelClass}>Servicios que ofrecés</legend>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(SERVICES).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-2 text-sm text-stone-700">
+            <label key={key} className="flex items-center gap-2.5 py-0.5 text-base text-stone-700">
               <input
                 type="checkbox"
                 name="services"
                 value={key}
                 defaultChecked={defaults?.services.includes(key)}
-                className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                className="h-5 w-5 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
               />
               {label}
             </label>
@@ -132,13 +136,13 @@ function WorkerFields({
         <legend className={labelClass}>Zonas donde trabajás</legend>
         <div className="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-stone-200 p-3 sm:grid-cols-3">
           {ZONES.map((zone) => (
-            <label key={zone} className="flex items-center gap-2 text-sm text-stone-700">
+            <label key={zone} className="flex items-center gap-2.5 py-0.5 text-base text-stone-700">
               <input
                 type="checkbox"
                 name="zones"
                 value={zone}
                 defaultChecked={defaults?.zones.includes(zone)}
-                className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                className="h-5 w-5 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
               />
               {zone}
             </label>
@@ -166,7 +170,7 @@ export function RegisterForm({ initialRole }: { initialRole: "CLIENT" | "WORKER"
             key={value}
             type="button"
             onClick={() => setRole(value)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-3 text-base font-semibold transition ${
               role === value ? "bg-white text-emerald-700 shadow-sm" : "text-stone-500"
             }`}
           >
@@ -202,7 +206,7 @@ export function RegisterForm({ initialRole }: { initialRole: "CLIENT" | "WORKER"
       </div>
       {role === "WORKER" && <WorkerFields />}
       {role === "WORKER" && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-base text-amber-800">
           Después de registrarte vamos a coordinar una entrevista y validación de
           identidad (DNI y referencias) para activar tu perfil como verificada.
         </p>
@@ -234,18 +238,32 @@ export function ProfileForm({
   );
 }
 
+export type SavedAddress = {
+  id: string;
+  label: string;
+  zone: string;
+  street: string;
+};
+
 export function BookingForm({
   workerId,
   hourlyRate,
   workerZones,
+  addresses,
 }: {
   workerId: string;
   hourlyRate: number;
   workerZones: string[];
+  addresses: SavedAddress[];
 }) {
   const [state, action] = useActionState(createBooking, {});
   const [type, setType] = useState<BookingType>("HORA");
   const [hours, setHours] = useState(4);
+  // Solo sirven las direcciones en zonas que la trabajadora atiende.
+  const usableAddresses = addresses.filter((a) => workerZones.includes(a.zone));
+  const [addressId, setAddressId] = useState<string>(
+    usableAddresses[0]?.id ?? "",
+  );
 
   const subtotal = estimateSubtotal(type, hourlyRate, hours);
   const fee = calcFee(subtotal);
@@ -261,7 +279,7 @@ export function BookingForm({
               key={key}
               type="button"
               onClick={() => setType(key as BookingType)}
-              className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+              className={`rounded-xl border px-3 py-3 text-base font-medium transition ${
                 type === key
                   ? "border-emerald-600 bg-emerald-50 text-emerald-700"
                   : "border-stone-300 text-stone-600 hover:border-stone-400"
@@ -297,35 +315,93 @@ export function BookingForm({
         ) : (
           <div>
             <span className={labelClass}>Duración</span>
-            <p className="rounded-lg bg-stone-100 px-3 py-2 text-sm text-stone-600">
+            <p className="rounded-xl bg-stone-100 px-4 py-3 text-base text-stone-600">
               {type === "DIA" ? "Día completo (8 horas)" : "4 visitas de día completo por mes"}
             </p>
           </div>
         )}
       </div>
       <div>
-        <label htmlFor="zone" className={labelClass}>Zona</label>
-        <select id="zone" name="zone" required className={inputClass} defaultValue="">
-          <option value="" disabled>
-            Elegí tu zona
-          </option>
-          {workerZones.map((zone) => (
-            <option key={zone} value={zone}>
-              {zone}
-            </option>
-          ))}
-        </select>
+        <span className={labelClass}>¿Dónde?</span>
+        {usableAddresses.length > 0 && (
+          <div className="space-y-2">
+            {usableAddresses.map((saved) => (
+              <label
+                key={saved.id}
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 ${
+                  addressId === saved.id
+                    ? "border-emerald-600 bg-emerald-50"
+                    : "border-stone-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="addressId"
+                  value={saved.id}
+                  checked={addressId === saved.id}
+                  onChange={() => setAddressId(saved.id)}
+                  className="h-5 w-5 border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-base text-stone-800">
+                  <span className="font-semibold">{saved.label}</span> —{" "}
+                  {saved.street} · {saved.zone}
+                </span>
+              </label>
+            ))}
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 ${
+                addressId === "" ? "border-emerald-600 bg-emerald-50" : "border-stone-300"
+              }`}
+            >
+              <input
+                type="radio"
+                name="addressId"
+                value=""
+                checked={addressId === ""}
+                onChange={() => setAddressId("")}
+                className="h-5 w-5 border-stone-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-base text-stone-800">Usar otra dirección</span>
+            </label>
+          </div>
+        )}
       </div>
-      <div>
-        <label htmlFor="address" className={labelClass}>Dirección</label>
-        <input
-          id="address"
-          name="address"
-          required
-          placeholder="Calle y número, piso/depto"
-          className={inputClass}
-        />
-      </div>
+      {addressId === "" && (
+        <>
+          <div>
+            <label htmlFor="zone" className={labelClass}>Zona</label>
+            <select id="zone" name="zone" required className={inputClass} defaultValue="">
+              <option value="" disabled>
+                Elegí tu zona
+              </option>
+              {workerZones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="address" className={labelClass}>Dirección</label>
+            <input
+              id="address"
+              name="address"
+              required
+              placeholder="Calle y número, piso/depto"
+              className={inputClass}
+            />
+          </div>
+          <label className="flex items-center gap-2.5 text-base text-stone-700">
+            <input
+              type="checkbox"
+              name="saveAddress"
+              value="Casa"
+              className="h-5 w-5 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            Guardar esta dirección para la próxima
+          </label>
+        </>
+      )}
       <div>
         <label htmlFor="notes" className={labelClass}>Notas (opcional)</label>
         <textarea
@@ -333,10 +409,10 @@ export function BookingForm({
           name="notes"
           rows={2}
           placeholder="Mascotas, llaves, qué priorizar, etc."
-          className={inputClass}
+          className={textareaClass}
         />
       </div>
-      <div className="space-y-1 rounded-xl bg-stone-50 p-4 text-sm">
+      <div className="space-y-1.5 rounded-xl bg-stone-50 p-4 text-base">
         <div className="flex justify-between text-stone-600">
           <span>
             Trabajo estimado{type === "MENSUAL" && " (por mes)"}
@@ -371,14 +447,14 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
       <input type="hidden" name="bookingId" value={bookingId} />
       <input type="hidden" name="rating" value={rating} />
       <div className="flex items-center gap-1">
-        <span className="mr-2 text-sm font-medium text-stone-700">Tu calificación:</span>
+        <span className="mr-2 text-base font-medium text-stone-700">Tu calificación:</span>
         {[1, 2, 3, 4, 5].map((value) => (
           <button
             key={value}
             type="button"
             onClick={() => setRating(value)}
             aria-label={`${value} estrellas`}
-            className={`text-2xl transition ${value <= rating ? "text-amber-500" : "text-stone-300 hover:text-amber-300"}`}
+            className={`text-3xl transition ${value <= rating ? "text-amber-500" : "text-stone-300 hover:text-amber-300"}`}
           >
             ★
           </button>
@@ -389,10 +465,115 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
         rows={2}
         required
         placeholder="¿Cómo fue el servicio?"
-        className={inputClass}
+        className={textareaClass}
       />
       <ErrorMessage state={state} />
       <SubmitButton>Publicar reseña</SubmitButton>
+    </form>
+  );
+}
+
+export function AddressForm() {
+  const [state, action] = useActionState(addAddress, {});
+  return (
+    <form action={action} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="label" className={labelClass}>Nombre</label>
+          <input
+            id="label"
+            name="label"
+            required
+            placeholder="Casa, Oficina…"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="addr-zone" className={labelClass}>Zona</label>
+          <select id="addr-zone" name="zone" required defaultValue="" className={inputClass}>
+            <option value="" disabled>
+              Elegí la zona
+            </option>
+            {ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label htmlFor="street" className={labelClass}>Dirección</label>
+        <input
+          id="street"
+          name="street"
+          required
+          placeholder="Calle y número, piso/depto"
+          className={inputClass}
+        />
+      </div>
+      <div>
+        <label htmlFor="details" className={labelClass}>Indicaciones (opcional)</label>
+        <input
+          id="details"
+          name="details"
+          placeholder="Timbre, portería, cómo llegar…"
+          className={inputClass}
+        />
+      </div>
+      <ErrorMessage state={state} />
+      <SubmitButton>Guardar dirección</SubmitButton>
+    </form>
+  );
+}
+
+function PhotoInput({ name, label }: { name: string; label: string }) {
+  const [fileName, setFileName] = useState<string | null>(null);
+  return (
+    <div>
+      <span className={labelClass}>{label}</span>
+      <label
+        className={`flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-dashed px-4 py-3 text-base transition ${
+          fileName
+            ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+            : "border-stone-300 text-stone-500 hover:border-emerald-400"
+        }`}
+      >
+        <span className="truncate">{fileName ?? "Tocá para sacar la foto o elegirla"}</span>
+        <span className="shrink-0 text-2xl">{fileName ? "✓" : "📷"}</span>
+        <input
+          type="file"
+          name={name}
+          accept="image/*"
+          required
+          className="hidden"
+          onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+        />
+      </label>
+    </div>
+  );
+}
+
+export function VerificationForm() {
+  const [state, action] = useActionState(submitVerification, {});
+  return (
+    <form action={action} className="space-y-4">
+      <div>
+        <label htmlFor="dniNumber" className={labelClass}>Número de DNI</label>
+        <input
+          id="dniNumber"
+          name="dniNumber"
+          inputMode="numeric"
+          required
+          placeholder="Sin puntos, ej: 28456789"
+          className={inputClass}
+        />
+      </div>
+      <PhotoInput name="docFront" label="Foto del frente del DNI" />
+      <PhotoInput name="docBack" label="Foto del dorso del DNI" />
+      <PhotoInput name="selfie" label="Selfie sosteniendo tu DNI" />
+      <ErrorMessage state={state} />
+      <SubmitButton>Enviar para revisión</SubmitButton>
     </form>
   );
 }

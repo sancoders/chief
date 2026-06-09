@@ -19,8 +19,10 @@ const bookingSchema = z.object({
   type: z.enum(["HORA", "DIA", "MENSUAL"]),
   date: z.string().refine((value) => !Number.isNaN(Date.parse(value)), "Elegí una fecha válida"),
   hours: z.coerce.number().int().min(2, "Mínimo 2 horas").max(12, "Máximo 12 horas"),
-  zone: z.enum(ZONES),
-  address: z.string().trim().min(5, "Ingresá la dirección"),
+  addressId: z.string().optional(),
+  zone: z.enum(ZONES).optional(),
+  address: z.string().trim().optional(),
+  saveAddress: z.string().optional(),
   notes: z.string().trim().max(500).default(""),
 });
 
@@ -38,8 +40,10 @@ export async function createBooking(
     type: formData.get("type"),
     date: formData.get("date"),
     hours: formData.get("hours") || 4,
-    zone: formData.get("zone"),
-    address: formData.get("address"),
+    addressId: formData.get("addressId") || undefined,
+    zone: formData.get("zone") || undefined,
+    address: formData.get("address") || undefined,
+    saveAddress: formData.get("saveAddress") || undefined,
     notes: formData.get("notes") ?? "",
   });
   if (!parsed.success) {
@@ -50,8 +54,37 @@ export async function createBooking(
   const worker = await db.workerProfile.findUnique({ where: { id: data.workerId } });
   if (!worker) return { error: "La trabajadora no existe" };
 
+  // Dirección: guardada (addressId) o ingresada a mano.
+  let zone: string;
+  let address: string;
+  if (data.addressId) {
+    const saved = await db.address.findFirst({
+      where: { id: data.addressId, userId: session.userId },
+    });
+    if (!saved) return { error: "La dirección elegida no existe" };
+    zone = saved.zone;
+    address = saved.details ? `${saved.street} (${saved.details})` : saved.street;
+  } else {
+    if (!data.zone) return { error: "Elegí la zona" };
+    if (!data.address || data.address.length < 5) {
+      return { error: "Ingresá la dirección" };
+    }
+    zone = data.zone;
+    address = data.address;
+    if (data.saveAddress) {
+      await db.address.create({
+        data: {
+          userId: session.userId,
+          label: data.saveAddress.trim() || "Casa",
+          zone,
+          street: address,
+        },
+      });
+    }
+  }
+
   const workerZones: string[] = JSON.parse(worker.zones);
-  if (!workerZones.includes(data.zone)) {
+  if (!workerZones.includes(zone)) {
     return { error: "La trabajadora no atiende esa zona" };
   }
 
@@ -66,8 +99,8 @@ export async function createBooking(
       type: data.type,
       date,
       hours: data.type === "HORA" ? data.hours : 8,
-      zone: data.zone,
-      address: data.address,
+      zone,
+      address,
       notes: data.notes,
       subtotal,
       fee: calcFee(subtotal),

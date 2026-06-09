@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getWorker } from "@/lib/workers";
 import { requireSession } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { Avatar, Stars, VerifiedBadge } from "@/components/ui";
 import { BookingForm } from "@/components/forms";
 import { formatARS } from "@/lib/constants";
@@ -16,7 +17,14 @@ export default async function BookingPage({
   if (session.role !== "CLIENT") redirect("/panel");
 
   const { id } = await params;
-  const worker = await getWorker(id);
+  const [worker, addresses] = await Promise.all([
+    getWorker(id),
+    db.address.findMany({
+      where: { userId: session.userId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, label: true, zone: true, street: true },
+    }),
+  ]);
   if (!worker || !worker.verified) notFound();
 
   return (
@@ -45,6 +53,7 @@ export default async function BookingPage({
           workerId={worker.id}
           hourlyRate={worker.hourlyRate}
           workerZones={worker.zones}
+          addresses={addresses}
         />
       </div>
     </div>

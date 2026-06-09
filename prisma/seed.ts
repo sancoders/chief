@@ -89,7 +89,7 @@ const WORKERS = [
     services: ["limpieza", "cocina"],
     hourlyRate: 6000,
     yearsExperience: 5,
-    verified: false, // queda en la cola de verificación del admin
+    verified: false, // queda EN_REVISION en la cola del admin
     reviews: [],
   },
 ];
@@ -139,7 +139,8 @@ async function main() {
             services: JSON.stringify(data.services),
             hourlyRate: data.hourlyRate,
             yearsExperience: data.yearsExperience,
-            verified: data.verified,
+            verificationStatus: data.verified ? "VERIFICADA" : "EN_REVISION",
+            dniNumber: data.verified ? "28456789" : "30123456",
             verifiedAt: data.verified ? new Date() : null,
           },
         },

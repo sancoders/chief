@@ -27,7 +27,7 @@ function toListItem(worker: {
   services: string;
   hourlyRate: number;
   yearsExperience: number;
-  verified: boolean;
+  verificationStatus: string;
   user: { name: string };
   bookings: { review: { rating: number } | null }[];
 }): WorkerListItem {
@@ -42,7 +42,7 @@ function toListItem(worker: {
     services: JSON.parse(worker.services),
     hourlyRate: worker.hourlyRate,
     yearsExperience: worker.yearsExperience,
-    verified: worker.verified,
+    verified: worker.verificationStatus === "VERIFICADA",
     rating: ratings.length
       ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
       : null,
@@ -57,7 +57,7 @@ const workerInclude = {
 
 export async function listWorkers(filters: Filters): Promise<WorkerListItem[]> {
   const workers = await db.workerProfile.findMany({
-    where: { verified: true },
+    where: { verificationStatus: "VERIFICADA" },
     include: workerInclude,
     orderBy: { createdAt: "asc" },
   });

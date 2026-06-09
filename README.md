@@ -10,8 +10,12 @@ CABA / GBA.
 - **Clientes** buscan por zona, servicio y tarifa; mandan una solicitud y ven
   el precio estimado antes de confirmar.
 - **Trabajadoras** crean su perfil gratis (tarifa, zonas, servicios) y reciben
-  solicitudes. Solo aparecen en búsquedas después de la **verificación**
-  (entrevista + DNI + referencias, hecha manualmente por el admin).
+  solicitudes. Solo aparecen en búsquedas después de la **verificación**:
+  suben DNI (frente/dorso) y selfie en `/panel/verificacion`, el admin revisa
+  los documentos en su panel, hace la entrevista por WhatsApp y aprueba o
+  rechaza (con motivo). Estados: `SIN_DOCS → EN_REVISION → VERIFICADA/RECHAZADA`.
+  Los documentos se guardan fuera de `public/` y se sirven por `/api/docs`
+  solo al admin o a la dueña.
 - **Confianza** como producto: badge de verificada, reseñas que solo pueden
   dejar clientes con una reserva completada, y teléfono visible recién cuando
   la trabajadora acepta.
@@ -38,9 +42,14 @@ npm run dev       # http://localhost:3000
 | Trabajadora sin verificar | `patricia@demo.caseras.ar` |
 
 Flujo completo para probar: ingresá como cliente → buscá en *Palermo* →
-reservá a María → salí e ingresá como María → aceptá la solicitud → marcala
-completada → volvé como cliente y dejá la reseña. Como admin podés verificar a
-Patricia y ver las métricas.
+reservá a María (guardando tu dirección) → salí e ingresá como María → aceptá
+la solicitud → marcala completada → volvé como cliente y dejá la reseña. Como
+admin verificás a Patricia (está en revisión) y ves las métricas. Registrate
+como trabajadora nueva para probar la subida de DNI.
+
+**Mobile-first**: la interfaz principal es la del celular (tab bar inferior
+con la pantalla actual resaltada); en desktop hay header con navegación y
+menú de perfil desplegable. Probalo con el inspector en viewport ~390px.
 
 ## Stack
 
@@ -72,12 +81,18 @@ SQLite no persiste en serverless. Antes de deployar:
    (un secreto largo y aleatorio: `openssl rand -hex 32`).
 4. `npx prisma db push` contra esa base y correr el seed si querés demo data.
 
+> Nota: los documentos subidos van al directorio `uploads/` (gitignoreado).
+> En Vercel el filesystem es efímero: para producción hay que moverlos a
+> Vercel Blob o S3 (cambiar `saveImage` en `src/app/actions/verification.ts`
+> y la lectura en `src/app/api/docs/[file]/route.ts`).
+
 ## Roadmap sugerido
 
 - [ ] Pagos con Mercado Pago (cobrar la tarifa de servicio online; mitiga
       la desintermediación junto con seguro/garantía)
 - [ ] Notificaciones por WhatsApp/email al recibir o aceptar solicitudes
-- [ ] Fotos de perfil y carga de DNI para la verificación
+- [ ] Storage de documentos en Vercel Blob/S3 para producción
+- [ ] Fotos de perfil
 - [ ] Disponibilidad horaria y calendario de la trabajadora
 - [ ] Chat interno (evitar compartir teléfono hasta la aceptación)
 - [ ] Búsqueda por geolocalización y más zonas

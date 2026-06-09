@@ -3,13 +3,15 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { updateBookingStatus } from "@/app/actions/bookings";
-import { setVerified } from "@/app/actions/admin";
+import { resolveVerification } from "@/app/actions/admin";
 import { Avatar, StatusBadge, VerifiedBadge } from "@/components/ui";
 import { ReviewForm } from "@/components/forms";
 import {
   BOOKING_TYPES,
+  VERIFICATION_STATUSES,
   formatARS,
   type BookingType,
+  type VerificationStatus,
 } from "@/lib/constants";
 
 export const metadata = { title: "Mi panel" };
@@ -202,11 +204,29 @@ async function WorkerPanel(userId: string) {
         </Link>
       </div>
 
-      {!profile.verified && (
-        <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-amber-800">
-          Tu perfil todavía <strong>no está verificado</strong>, por eso no aparece
-          en las búsquedas. Te vamos a contactar por WhatsApp para coordinar la
-          entrevista y validación de identidad.
+      {profile.verificationStatus === "SIN_DOCS" && (
+        <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-base text-amber-800">
+          Tu perfil todavía <strong>no aparece en las búsquedas</strong>. Subí tu
+          DNI y una selfie para empezar la verificación.{" "}
+          <Link href="/panel/verificacion" className="font-semibold underline">
+            Verificarme ahora →
+          </Link>
+        </div>
+      )}
+      {profile.verificationStatus === "EN_REVISION" && (
+        <div className="mt-4 rounded-xl bg-sky-50 px-4 py-3 text-base text-sky-800">
+          Tus documentos están <strong>en revisión</strong>. Te contactamos por
+          WhatsApp para la entrevista. Mientras tanto tu perfil no aparece en las
+          búsquedas.
+        </div>
+      )}
+      {profile.verificationStatus === "RECHAZADA" && (
+        <div className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-base text-rose-800">
+          Tu verificación fue <strong>rechazada</strong>
+          {profile.verificationNote && <>: {profile.verificationNote}</>}.{" "}
+          <Link href="/panel/verificacion" className="font-semibold underline">
+            Volver a intentar →
+          </Link>
         </div>
       )}
 
@@ -315,11 +335,147 @@ async function WorkerPanel(userId: string) {
   );
 }
 
+const STATUS_ORDER: Record<string, number> = {
+  EN_REVISION: 0,
+  SIN_DOCS: 1,
+  RECHAZADA: 2,
+  VERIFICADA: 3,
+};
+
+function AdminVerificationCard({
+  worker,
+}: {
+  worker: {
+    id: string;
+    verificationStatus: string;
+    dniNumber: string | null;
+    docFront: string | null;
+    docBack: string | null;
+    selfie: string | null;
+    hourlyRate: number;
+    user: { name: string; email: string; phone: string };
+  };
+}) {
+  const status = worker.verificationStatus;
+  const docs = [
+    ["DNI frente", worker.docFront],
+    ["DNI dorso", worker.docBack],
+    ["Selfie", worker.selfie],
+  ].filter((d): d is [string, string] => d[1] != null);
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Avatar name={worker.user.name} />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-semibold text-stone-900">
+                {worker.user.name}
+              </span>
+              {status === "VERIFICADA" && <VerifiedBadge />}
+            </div>
+            <p className="text-sm text-stone-500">
+              {worker.user.email} · {worker.user.phone} ·{" "}
+              {formatARS(worker.hourlyRate)}/h
+            </p>
+            {worker.dniNumber && (
+              <p className="text-sm text-stone-500">DNI: {worker.dniNumber}</p>
+            )}
+          </div>
+        </div>
+        <StatusVerification status={status} />
+      </div>
+
+      {docs.length > 0 && status !== "VERIFICADA" && (
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {docs.map(([label, file]) => (
+            <a
+              key={file}
+              href={`/api/docs/${file}`}
+              target="_blank"
+              className="block overflow-hidden rounded-xl border border-stone-200"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/docs/${file}`}
+                alt={label}
+                className="h-32 w-full object-cover"
+              />
+              <span className="block bg-stone-50 px-2 py-1 text-center text-xs text-stone-600">
+                {label}
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {status === "EN_REVISION" && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <form action={resolveVerification}>
+            <input type="hidden" name="workerId" value={worker.id} />
+            <input type="hidden" name="decision" value="VERIFICADA" />
+            <button
+              type="submit"
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-700"
+            >
+              Verificar ✓
+            </button>
+          </form>
+          <form action={resolveVerification} className="flex flex-1 gap-2">
+            <input type="hidden" name="workerId" value={worker.id} />
+            <input type="hidden" name="decision" value="RECHAZADA" />
+            <input
+              name="note"
+              placeholder="Motivo del rechazo"
+              className="h-11 min-w-40 flex-1 rounded-xl border border-stone-300 px-3 text-base"
+            />
+            <button
+              type="submit"
+              className="rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50"
+            >
+              Rechazar
+            </button>
+          </form>
+        </div>
+      )}
+      {status === "VERIFICADA" && (
+        <form action={resolveVerification} className="mt-3">
+          <input type="hidden" name="workerId" value={worker.id} />
+          <input type="hidden" name="decision" value="SIN_DOCS" />
+          <button
+            type="submit"
+            className="rounded-xl border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
+          >
+            Quitar verificación
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function StatusVerification({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    EN_REVISION: "bg-sky-100 text-sky-700",
+    SIN_DOCS: "bg-stone-200 text-stone-600",
+    RECHAZADA: "bg-rose-100 text-rose-700",
+    VERIFICADA: "bg-emerald-100 text-emerald-700",
+  };
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-sm font-medium ${styles[status] ?? ""}`}
+    >
+      {VERIFICATION_STATUSES[status as VerificationStatus] ?? status}
+    </span>
+  );
+}
+
 async function AdminPanel() {
   const [workers, stats] = await Promise.all([
     db.workerProfile.findMany({
       include: { user: true },
-      orderBy: [{ verified: "asc" }, { createdAt: "desc" }],
+      orderBy: { createdAt: "desc" },
     }),
     Promise.all([
       db.user.count({ where: { role: "CLIENT" } }),
@@ -328,11 +484,16 @@ async function AdminPanel() {
     ]),
   ]);
   const [clientCount, bookingCount, feeAgg] = stats;
-  const pendingVerification = workers.filter((w) => !w.verified);
+  const sorted = [...workers].sort(
+    (a, b) =>
+      (STATUS_ORDER[a.verificationStatus] ?? 9) -
+      (STATUS_ORDER[b.verificationStatus] ?? 9),
+  );
+  const inReview = workers.filter((w) => w.verificationStatus === "EN_REVISION");
 
   return (
     <>
-      <h2 className="text-xl font-bold text-stone-900">Administración</h2>
+      <h2 className="text-2xl font-bold text-stone-900">Administración</h2>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           ["Trabajadoras", workers.length],
@@ -340,7 +501,7 @@ async function AdminPanel() {
           ["Reservas", bookingCount],
           ["Comisiones (completadas)", formatARS(feeAgg._sum.fee ?? 0)],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-stone-200 bg-white p-4">
+          <div key={label} className="rounded-2xl border border-stone-200 bg-white p-4">
             <p className="text-xs text-stone-500">{label}</p>
             <p className="mt-1 text-xl font-bold text-stone-900">{value}</p>
           </div>
@@ -348,49 +509,12 @@ async function AdminPanel() {
       </div>
 
       <section className="mt-8">
-        <h3 className="font-semibold text-stone-900">
-          Pendientes de verificación ({pendingVerification.length})
+        <h3 className="text-lg font-semibold text-stone-900">
+          Verificaciones {inReview.length > 0 && `· ${inReview.length} en revisión`}
         </h3>
         <div className="mt-3 space-y-3">
-          {workers.map((worker) => (
-            <div
-              key={worker.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar name={worker.user.name} />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-stone-900">
-                      {worker.user.name}
-                    </span>
-                    {worker.verified && <VerifiedBadge />}
-                  </div>
-                  <p className="text-sm text-stone-500">
-                    {worker.user.email} · {worker.user.phone} ·{" "}
-                    {formatARS(worker.hourlyRate)}/h
-                  </p>
-                </div>
-              </div>
-              <form action={setVerified}>
-                <input type="hidden" name="workerId" value={worker.id} />
-                <input
-                  type="hidden"
-                  name="verified"
-                  value={worker.verified ? "false" : "true"}
-                />
-                <button
-                  type="submit"
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    worker.verified
-                      ? "border border-stone-300 text-stone-600 hover:bg-stone-100"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  }`}
-                >
-                  {worker.verified ? "Quitar verificación" : "Verificar"}
-                </button>
-              </form>
-            </div>
+          {sorted.map((worker) => (
+            <AdminVerificationCard key={worker.id} worker={worker} />
           ))}
         </div>
       </section>

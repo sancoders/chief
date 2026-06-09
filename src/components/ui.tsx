@@ -36,7 +36,7 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "md" | "lg"
 
 export function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
         <path
           fillRule="evenodd"
@@ -70,7 +70,7 @@ export function StatusBadge({ status }: { status: string }) {
   const key = status as BookingStatus;
   return (
     <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[key] ?? "bg-stone-200 text-stone-600"}`}
+      className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_STYLES[key] ?? "bg-stone-200 text-stone-600"}`}
     >
       {BOOKING_STATUSES[key] ?? status}
     </span>
@@ -83,7 +83,7 @@ export function ServiceChips({ services }: { services: string[] }) {
       {services.map((service) => (
         <span
           key={service}
-          className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs text-stone-600"
+          className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-600"
         >
           {SERVICES[service as ServiceKey] ?? service}
         </span>
@@ -102,7 +102,7 @@ export function WorkerCard({ worker }: { worker: WorkerListItem }) {
         <Avatar name={worker.name} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-stone-900">{worker.name}</h3>
+            <h3 className="text-lg font-semibold text-stone-900">{worker.name}</h3>
             {worker.verified && <VerifiedBadge />}
           </div>
           <p className="text-sm text-stone-500">
@@ -116,7 +116,7 @@ export function WorkerCard({ worker }: { worker: WorkerListItem }) {
           </p>
         </div>
       </div>
-      <p className="line-clamp-2 text-sm text-stone-600">{worker.bio}</p>
+      <p className="line-clamp-2 text-base text-stone-600">{worker.bio}</p>
       <ServiceChips services={worker.services} />
       <div className="flex items-center justify-between border-t border-stone-100 pt-3">
         <span className="text-sm text-stone-500">{worker.zones.slice(0, 3).join(" · ")}</span>
