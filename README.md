@@ -9,13 +9,14 @@ CABA / GBA.
 
 - **Clientes** buscan por zona, servicio y tarifa; mandan una solicitud y ven
   el precio estimado antes de confirmar.
-- **Trabajadoras** crean su perfil gratis (tarifa, zonas, servicios) y reciben
-  solicitudes. Solo aparecen en búsquedas después de la **verificación**:
-  suben DNI (frente/dorso) y selfie en `/panel/verificacion`, el admin revisa
-  los documentos en su panel, hace la entrevista por WhatsApp y aprueba o
-  rechaza (con motivo). Estados: `SIN_DOCS → EN_REVISION → VERIFICADA/RECHAZADA`.
-  Los documentos se guardan fuera de `public/` y se sirven por `/api/docs`
-  solo al admin o a la dueña.
+- **Comunidad cerrada y verificada de los dos lados**: nadie (cliente o
+  trabajadora) puede ver perfiles, reservar ni trabajar sin antes verificar
+  su identidad en `/verificacion`: foto de perfil (pública y obligatoria),
+  DNI frente/dorso, selfie con el DNI y dirección declarada (el admin la
+  valida contra el DNI). Estados: `SIN_DOCS → EN_REVISION → VERIFICADA/RECHAZADA`.
+  El admin aprueba o rechaza (con motivo) desde su panel. El DNI y la selfie
+  se guardan fuera de `public/` y se sirven por `/api/docs` solo al admin o
+  al dueño; la foto de perfil es pública vía `/api/foto`.
 - **Confianza** como producto: badge de verificada, reseñas que solo pueden
   dejar clientes con una reserva completada, y teléfono visible recién cuando
   la trabajadora acepta.
@@ -37,9 +38,10 @@ npm run dev       # http://localhost:3000
 | Rol | Email |
 | --- | --- |
 | Admin | `admin@caseras.ar` |
-| Cliente | `cliente@demo.caseras.ar` |
+| Cliente verificada | `cliente@demo.caseras.ar` |
+| Cliente sin verificar (para ver el gate) | `nuevo@demo.caseras.ar` |
 | Trabajadora verificada | `maria@demo.caseras.ar` |
-| Trabajadora sin verificar | `patricia@demo.caseras.ar` |
+| Trabajadora en revisión | `patricia@demo.caseras.ar` |
 
 Flujo completo para probar: ingresá como cliente → buscá en *Palermo* →
 reservá a María (guardando tu dirección) → salí e ingresá como María → aceptá
@@ -50,6 +52,13 @@ como trabajadora nueva para probar la subida de DNI.
 **Mobile-first**: la interfaz principal es la del celular (tab bar inferior
 con la pantalla actual resaltada); en desktop hay header con navegación y
 menú de perfil desplegable. Probalo con el inspector en viewport ~390px.
+
+## Tests
+
+`npm run test:e2e` corre un recorrido completo con navegador real (Playwright,
+viewport de celular): verificación con subida de documentos, aprobación del
+admin, búsqueda, reserva y aceptación. Requiere el server corrido en :3100
+(`npm run build && npm start -- -p 3100`) y deja capturas en `/tmp/shots`.
 
 ## Stack
 
@@ -92,7 +101,6 @@ SQLite no persiste en serverless. Antes de deployar:
       la desintermediación junto con seguro/garantía)
 - [ ] Notificaciones por WhatsApp/email al recibir o aceptar solicitudes
 - [ ] Storage de documentos en Vercel Blob/S3 para producción
-- [ ] Fotos de perfil
 - [ ] Disponibilidad horaria y calendario de la trabajadora
 - [ ] Chat interno (evitar compartir teléfono hasta la aceptación)
 - [ ] Búsqueda por geolocalización y más zonas

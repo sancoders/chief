@@ -209,14 +209,14 @@ export function ProfileMenu({ session }: { session: Session }) {
             Mis direcciones
           </Link>
           {session.role === "WORKER" && (
-            <>
-              <Link href="/panel/perfil" className={menuItemClass} onClick={() => setOpen(false)}>
-                Mi perfil público
-              </Link>
-              <Link href="/panel/verificacion" className={menuItemClass} onClick={() => setOpen(false)}>
-                Verificación
-              </Link>
-            </>
+            <Link href="/panel/perfil" className={menuItemClass} onClick={() => setOpen(false)}>
+              Mi perfil público
+            </Link>
+          )}
+          {session.role !== "ADMIN" && (
+            <Link href="/verificacion" className={menuItemClass} onClick={() => setOpen(false)}>
+              Verificación de identidad
+            </Link>
           )}
           <div className="border-t border-stone-100">
             <form action={logout}>

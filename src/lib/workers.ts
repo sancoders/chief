@@ -4,6 +4,7 @@ import { db } from "./db";
 export type WorkerListItem = {
   id: string;
   name: string;
+  photo: string | null;
   bio: string;
   zones: string[];
   services: string[];
@@ -27,8 +28,7 @@ function toListItem(worker: {
   services: string;
   hourlyRate: number;
   yearsExperience: number;
-  verificationStatus: string;
-  user: { name: string };
+  user: { name: string; photo: string | null; verificationStatus: string };
   bookings: { review: { rating: number } | null }[];
 }): WorkerListItem {
   const ratings = worker.bookings
@@ -37,12 +37,13 @@ function toListItem(worker: {
   return {
     id: worker.id,
     name: worker.user.name,
+    photo: worker.user.photo,
     bio: worker.bio,
     zones: JSON.parse(worker.zones),
     services: JSON.parse(worker.services),
     hourlyRate: worker.hourlyRate,
     yearsExperience: worker.yearsExperience,
-    verified: worker.verificationStatus === "VERIFICADA",
+    verified: worker.user.verificationStatus === "VERIFICADA",
     rating: ratings.length
       ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
       : null,
@@ -51,13 +52,13 @@ function toListItem(worker: {
 }
 
 const workerInclude = {
-  user: { select: { name: true } },
+  user: { select: { name: true, photo: true, verificationStatus: true } },
   bookings: { select: { review: { select: { rating: true } } } },
 } as const;
 
 export async function listWorkers(filters: Filters): Promise<WorkerListItem[]> {
   const workers = await db.workerProfile.findMany({
-    where: { verificationStatus: "VERIFICADA" },
+    where: { user: { verificationStatus: "VERIFICADA" } },
     include: workerInclude,
     orderBy: { createdAt: "asc" },
   });

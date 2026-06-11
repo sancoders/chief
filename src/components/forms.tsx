@@ -558,6 +558,7 @@ export function VerificationForm() {
   const [state, action] = useActionState(submitVerification, {});
   return (
     <form action={action} className="space-y-4">
+      <PhotoInput name="photo" label="Tu foto de perfil (pública)" />
       <div>
         <label htmlFor="dniNumber" className={labelClass}>Número de DNI</label>
         <input
@@ -572,6 +573,39 @@ export function VerificationForm() {
       <PhotoInput name="docFront" label="Foto del frente del DNI" />
       <PhotoInput name="docBack" label="Foto del dorso del DNI" />
       <PhotoInput name="selfie" label="Selfie sosteniendo tu DNI" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="addressStreet" className={labelClass}>
+            Tu dirección (como figura en el DNI)
+          </label>
+          <input
+            id="addressStreet"
+            name="addressStreet"
+            required
+            placeholder="Calle y número"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="addressZone" className={labelClass}>Zona</label>
+          <select
+            id="addressZone"
+            name="addressZone"
+            required
+            defaultValue=""
+            className={inputClass}
+          >
+            <option value="" disabled>
+              Elegí tu zona
+            </option>
+            {ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
       <ErrorMessage state={state} />
       <SubmitButton>Enviar para revisión</SubmitButton>
     </form>

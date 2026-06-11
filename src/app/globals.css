@@ -16,7 +16,7 @@ html {
 }
 
 body {
-  /* Crema cálido de fondo, look hogareño */
+  /* Crema cálido, look hogareño (no blanco clínico) */
   background: #faf6f0;
   color: #292524;
   font-family: var(--font-geist-sans), system-ui, sans-serif;

@@ -1,8 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth";
 import { UPLOADS_DIR } from "@/lib/uploads";
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -12,27 +10,16 @@ const CONTENT_TYPES: Record<string, string> = {
   ".heic": "image/heic",
 };
 
-// Sirve documentos de verificación SOLO al admin o al dueño del documento.
+// Fotos de perfil: públicas. Solo sirve archivos con prefijo "foto-";
+// los documentos (DNI/selfie) usan "doc-" y van por /api/docs con auth.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ file: string }> },
 ) {
-  const session = await getSession();
-  if (!session) return new NextResponse("No autorizado", { status: 401 });
-
   const { file } = await params;
-  // path.basename bloquea cualquier intento de path traversal.
   const name = path.basename(file);
-
-  if (session.role !== "ADMIN") {
-    const user = await db.user.findUnique({
-      where: { id: session.userId },
-      select: { docFront: true, docBack: true, selfie: true },
-    });
-    const ownFiles = [user?.docFront, user?.docBack, user?.selfie];
-    if (!ownFiles.includes(name)) {
-      return new NextResponse("No autorizado", { status: 403 });
-    }
+  if (!name.startsWith("foto-")) {
+    return new NextResponse("No autorizado", { status: 403 });
   }
 
   try {
@@ -40,7 +27,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(data), {
       headers: {
         "Content-Type": CONTENT_TYPES[path.extname(name)] ?? "application/octet-stream",
-        "Cache-Control": "private, max-age=300",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch {

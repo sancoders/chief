@@ -23,6 +23,19 @@ model User {
   role         String   @default("CLIENT") // CLIENT | WORKER | ADMIN
   createdAt    DateTime @default(now())
 
+  // Verificación de identidad: obligatoria para AMBOS lados antes de operar.
+  // SIN_DOCS | EN_REVISION | VERIFICADA | RECHAZADA
+  verificationStatus String    @default("SIN_DOCS")
+  verificationNote   String    @default("") // motivo de rechazo, visible para la persona
+  photo              String? // foto de perfil PÚBLICA (filename en uploads/ o URL en seeds)
+  dniNumber          String?
+  docFront           String? // privados: solo admin o dueño vía /api/docs
+  docBack            String?
+  selfie             String?
+  addressStreet      String? // dirección declarada: el admin valida que coincida con el DNI
+  addressZone        String?
+  verifiedAt         DateTime?
+
   workerProfile WorkerProfile?
   bookings      Booking[]      @relation("ClientBookings")
   addresses     Address[]
@@ -48,16 +61,6 @@ model WorkerProfile {
   services        String // JSON array de servicios, ej: ["limpieza","planchado"]
   hourlyRate      Int // ARS por hora
   yearsExperience Int      @default(0)
-
-  // Verificación: SIN_DOCS | EN_REVISION | VERIFICADA | RECHAZADA
-  verificationStatus String    @default("SIN_DOCS")
-  verificationNote   String    @default("") // motivo de rechazo, visible para la trabajadora
-  dniNumber          String?
-  docFront           String? // nombres de archivo en uploads/ (servidos por /api/docs)
-  docBack            String?
-  selfie             String?
-  verifiedAt         DateTime?
-
   createdAt       DateTime @default(now())
 
   bookings Booking[]

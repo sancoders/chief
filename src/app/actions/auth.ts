@@ -86,8 +86,8 @@ export async function register(
   });
 
   await createSession({ userId: user.id, role: user.role as Role, name: user.name });
-  // Las trabajadoras van directo a subir sus documentos.
-  redirect(role === "WORKER" ? "/panel/verificacion" : "/panel");
+  // Ambos lados deben verificar identidad antes de operar.
+  redirect("/verificacion");
 }
 
 export async function login(

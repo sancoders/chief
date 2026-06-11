@@ -34,6 +34,13 @@ export async function createBooking(
   if (session.role !== "CLIENT") {
     return { error: "Solo los clientes pueden hacer reservas" };
   }
+  const clientUser = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { verificationStatus: true },
+  });
+  if (clientUser?.verificationStatus !== "VERIFICADA") {
+    return { error: "Tenés que verificar tu identidad antes de reservar" };
+  }
 
   const parsed = bookingSchema.safeParse({
     workerId: formData.get("workerId"),

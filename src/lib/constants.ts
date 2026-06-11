@@ -92,3 +92,9 @@ export function estimateSubtotal(
 export function calcFee(subtotal: number): number {
   return Math.round(subtotal * SERVICE_FEE_RATE);
 }
+
+/** Resuelve la src de una foto de perfil: URL externa (seeds) o archivo subido. */
+export function photoSrc(photo: string | null | undefined): string | null {
+  if (!photo) return null;
+  return photo.startsWith("http") ? photo : `/api/foto/${photo}`;
+}

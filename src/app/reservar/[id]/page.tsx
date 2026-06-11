@@ -1,9 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { getWorker } from "@/lib/workers";
-import { requireSession } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Avatar, Stars, VerifiedBadge } from "@/components/ui";
 import { BookingForm } from "@/components/forms";
+import { VerificationGate } from "@/components/gate";
 import { formatARS } from "@/lib/constants";
 
 export const metadata = { title: "Reservar" };
@@ -13,8 +14,13 @@ export default async function BookingPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireSession();
-  if (session.role !== "CLIENT") redirect("/panel");
+  const user = await getSessionUser();
+  if (!user) redirect("/ingresar");
+  if (user.role !== "CLIENT") redirect("/panel");
+  if (user.verificationStatus !== "VERIFICADA") {
+    return <VerificationGate status={user.verificationStatus} />;
+  }
+  const session = { userId: user.id };
 
   const { id } = await params;
   const [worker, addresses] = await Promise.all([
@@ -31,7 +37,7 @@ export default async function BookingPage({
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="text-2xl font-bold text-stone-900">Nueva solicitud</h1>
       <div className="mt-4 flex items-center gap-3 rounded-xl border border-stone-200 bg-white p-4">
-        <Avatar name={worker.name} />
+        <Avatar name={worker.name} photo={worker.photo} size="lg" />
         <div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-stone-900">{worker.name}</span>

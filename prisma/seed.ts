@@ -1,5 +1,5 @@
-// Datos de demostración: admin, clientes, trabajadoras verificadas con
-// reservas completadas y reseñas. Correr con `npm run db:seed`.
+// Datos de demostración: admin, clientes y trabajadoras verificadas con
+// fotos, reservas completadas y reseñas. Correr con `npm run db:seed`.
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -7,17 +7,24 @@ const db = new PrismaClient();
 
 const PASSWORD = "demo1234";
 
+// Retratos de demostración (randomuser.me). En producción cada persona
+// sube su foto real en la verificación.
+const portrait = (n: number) => `https://randomuser.me/api/portraits/women/${n}.jpg`;
+
 const WORKERS = [
   {
     name: "María Gómez",
     email: "maria@demo.caseras.ar",
     phone: "+54 9 11 5555-0101",
+    photo: portrait(65),
     bio: "Hace 12 años trabajo en casas de Palermo y Belgrano. Soy muy detallista con la limpieza profunda y me encanta dejar la cocina impecable. Tengo referencias comprobables.",
     zones: ["Palermo", "Belgrano", "Colegiales"],
     services: ["limpieza", "profunda", "planchado"],
     hourlyRate: 6500,
     yearsExperience: 12,
     verified: true,
+    address: "Gorriti 4520",
+    addressZone: "Palermo",
     reviews: [
       { rating: 5, comment: "Impecable todo. Súper puntual y de confianza, ya la contraté de nuevo." },
       { rating: 5, comment: "María es una genia, dejó el departamento perfecto y es muy amorosa." },
@@ -28,12 +35,15 @@ const WORKERS = [
     name: "Rosa Benítez",
     email: "rosa@demo.caseras.ar",
     phone: "+54 9 11 5555-0102",
+    photo: portrait(44),
     bio: "Trabajo por hora o mensual en zona norte. Cocino casero (¡mis tartas son famosas!) y tengo mucha experiencia cuidando adultos mayores con paciencia y cariño.",
     zones: ["Vicente López", "Olivos", "Núñez", "Belgrano"],
     services: ["limpieza", "cocina", "mayores"],
     hourlyRate: 7000,
     yearsExperience: 18,
     verified: true,
+    address: "Av. Maipú 2300",
+    addressZone: "Olivos",
     reviews: [
       { rating: 5, comment: "Rosa cuida a mi mamá hace meses por la plataforma. Totalmente confiable." },
       { rating: 5, comment: "Cocina riquísimo y es súper prolija. La recomiendo con los ojos cerrados." },
@@ -43,12 +53,15 @@ const WORKERS = [
     name: "Norma Acosta",
     email: "norma@demo.caseras.ar",
     phone: "+54 9 11 5555-0103",
+    photo: portrait(68),
     bio: "Vivo en Caballito y trabajo en barrios cercanos. Rápida, ordenada y de palabra: si digo un horario, lo cumplo. Hago limpieza general y profunda de mudanzas.",
     zones: ["Caballito", "Almagro", "Villa Crespo", "Flores"],
     services: ["limpieza", "profunda"],
     hourlyRate: 5500,
     yearsExperience: 8,
     verified: true,
+    address: "Av. Rivadavia 5120",
+    addressZone: "Caballito",
     reviews: [
       { rating: 5, comment: "Hizo la limpieza post mudanza y quedó todo nuevo. Excelente precio." },
       { rating: 4, comment: "Muy cumplidora. El departamento quedó muy bien." },
@@ -58,12 +71,15 @@ const WORKERS = [
     name: "Claudia Romero",
     email: "claudia@demo.caseras.ar",
     phone: "+54 9 11 5555-0104",
+    photo: portrait(47),
     bio: "Niñera y ayuda doméstica con 10 años de experiencia y curso de primeros auxilios. Los chicos me adoran y las casas quedan en orden. Disponible por día o mensual.",
     zones: ["Recoleta", "Palermo", "Almagro"],
     services: ["ninos", "limpieza", "cocina"],
     hourlyRate: 7500,
     yearsExperience: 10,
     verified: true,
+    address: "Juncal 2810",
+    addressZone: "Recoleta",
     reviews: [
       { rating: 5, comment: "Claudia cuida a mis dos hijos y es espectacular. Responsable y cariñosa." },
     ],
@@ -72,24 +88,30 @@ const WORKERS = [
     name: "Susana Ledesma",
     email: "susana@demo.caseras.ar",
     phone: "+54 9 11 5555-0105",
+    photo: portrait(57),
     bio: "Trabajo en zona oeste y sur. Especialista en planchado (camisas perfectas) y limpieza semanal de mantenimiento. Busco casas fijas por mes.",
     zones: ["Ramos Mejía", "Morón", "Lomas de Zamora", "Quilmes"],
     services: ["planchado", "limpieza"],
     hourlyRate: 5000,
     yearsExperience: 15,
     verified: true,
+    address: "Espora 940",
+    addressZone: "Ramos Mejía",
     reviews: [],
   },
   {
     name: "Patricia Vega",
     email: "patricia@demo.caseras.ar",
     phone: "+54 9 11 5555-0106",
+    photo: portrait(26),
     bio: "Recién me sumo a la plataforma. Tengo 5 años de experiencia en limpieza y cocina en San Isidro y Martínez, con referencias de las familias con las que trabajé.",
     zones: ["San Isidro", "Martínez", "Olivos"],
     services: ["limpieza", "cocina"],
     hourlyRate: 6000,
     yearsExperience: 5,
     verified: false, // queda EN_REVISION en la cola del admin
+    address: "Alsina 1230",
+    addressZone: "San Isidro",
     reviews: [],
   },
 ];
@@ -106,9 +128,12 @@ async function main() {
       name: "Admin Caseras",
       phone: "+54 9 11 5555-0000",
       role: "ADMIN",
+      verificationStatus: "VERIFICADA",
+      verifiedAt: new Date(),
     },
   });
 
+  // Cliente demo: verificada (puede ver perfiles y reservar).
   const client = await db.user.upsert({
     where: { email: "cliente@demo.caseras.ar" },
     update: {},
@@ -118,6 +143,26 @@ async function main() {
       name: "Julieta Pérez",
       phone: "+54 9 11 5555-0201",
       role: "CLIENT",
+      photo: portrait(12),
+      verificationStatus: "VERIFICADA",
+      dniNumber: "33222111",
+      addressStreet: "Av. Santa Fe 3200, 4º B",
+      addressZone: "Palermo",
+      verifiedAt: new Date(),
+    },
+  });
+
+  // Cliente demo SIN verificar: para ver la experiencia del gate.
+  await db.user.upsert({
+    where: { email: "nuevo@demo.caseras.ar" },
+    update: {},
+    create: {
+      email: "nuevo@demo.caseras.ar",
+      passwordHash,
+      name: "Martín López",
+      phone: "+54 9 11 5555-0202",
+      role: "CLIENT",
+      verificationStatus: "SIN_DOCS",
     },
   });
 
@@ -132,6 +177,12 @@ async function main() {
         name: data.name,
         phone: data.phone,
         role: "WORKER",
+        photo: data.photo,
+        verificationStatus: data.verified ? "VERIFICADA" : "EN_REVISION",
+        dniNumber: data.verified ? "28456789" : "30123456",
+        addressStreet: data.address,
+        addressZone: data.addressZone,
+        verifiedAt: data.verified ? new Date() : null,
         workerProfile: {
           create: {
             bio: data.bio,
@@ -139,9 +190,6 @@ async function main() {
             services: JSON.stringify(data.services),
             hourlyRate: data.hourlyRate,
             yearsExperience: data.yearsExperience,
-            verificationStatus: data.verified ? "VERIFICADA" : "EN_REVISION",
-            dniNumber: data.verified ? "28456789" : "30123456",
-            verifiedAt: data.verified ? new Date() : null,
           },
         },
       },
@@ -173,9 +221,10 @@ async function main() {
 
   console.log("Seed listo ✔");
   console.log(`Contraseña de todas las cuentas demo: ${PASSWORD}`);
-  console.log("  Admin:    admin@caseras.ar");
-  console.log("  Cliente:  cliente@demo.caseras.ar");
-  console.log("  Trabajadora: maria@demo.caseras.ar (y otras @demo.caseras.ar)");
+  console.log("  Admin:               admin@caseras.ar");
+  console.log("  Cliente verificada:  cliente@demo.caseras.ar");
+  console.log("  Cliente sin verificar: nuevo@demo.caseras.ar");
+  console.log("  Trabajadora:         maria@demo.caseras.ar (y otras @demo.caseras.ar)");
 }
 
 main()

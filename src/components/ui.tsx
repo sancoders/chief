@@ -3,10 +3,12 @@ import {
   BOOKING_STATUSES,
   SERVICES,
   formatARS,
+  photoSrc,
   type BookingStatus,
   type ServiceKey,
 } from "@/lib/constants";
 import type { WorkerListItem } from "@/lib/workers";
+import { Foto } from "./foto";
 
 const AVATAR_COLORS = [
   "bg-rose-200 text-rose-800",
@@ -17,17 +19,41 @@ const AVATAR_COLORS = [
   "bg-teal-200 text-teal-800",
 ];
 
-export function Avatar({ name, size = "md" }: { name: string; size?: "md" | "lg" }) {
+const AVATAR_SIZES = {
+  md: "h-12 w-12 text-base",
+  lg: "h-24 w-24 text-3xl",
+  xl: "h-32 w-32 text-4xl",
+} as const;
+
+/** Foto de perfil real si existe; iniciales como último recurso. */
+export function Avatar({
+  name,
+  photo,
+  size = "md",
+}: {
+  name: string;
+  photo?: string | null;
+  size?: keyof typeof AVATAR_SIZES;
+}) {
+  const src = photoSrc(photo);
+  if (src) {
+    return (
+      <Foto
+        src={src}
+        alt={name}
+        className={`${AVATAR_SIZES[size]} shrink-0 rounded-full border-2 border-white object-cover shadow-md`}
+      />
+    );
+  }
   const initials = name
     .split(" ")
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
   const color = AVATAR_COLORS[name.length % AVATAR_COLORS.length];
-  const sizeClasses = size === "lg" ? "h-20 w-20 text-2xl" : "h-12 w-12 text-base";
   return (
     <div
-      className={`${color} ${sizeClasses} flex shrink-0 items-center justify-center rounded-full font-semibold`}
+      className={`${color} ${AVATAR_SIZES[size]} flex shrink-0 items-center justify-center rounded-full font-semibold`}
     >
       {initials}
     </div>
@@ -36,7 +62,7 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "md" | "lg"
 
 export function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2.5 py-0.5 text-sm font-semibold text-white">
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
         <path
           fillRule="evenodd"
@@ -83,7 +109,7 @@ export function ServiceChips({ services }: { services: string[] }) {
       {services.map((service) => (
         <span
           key={service}
-          className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-600"
+          className="rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-800"
         >
           {SERVICES[service as ServiceKey] ?? service}
         </span>
@@ -92,37 +118,53 @@ export function ServiceChips({ services }: { services: string[] }) {
   );
 }
 
+/** Card de trabajadora: la foto es la protagonista. */
 export function WorkerCard({ worker }: { worker: WorkerListItem }) {
+  const src = photoSrc(worker.photo);
   return (
     <Link
       href={`/trabajadoras/${worker.id}`}
-      className="flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-emerald-300 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
     >
-      <div className="flex items-start gap-3">
-        <Avatar name={worker.name} />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-stone-900">{worker.name}</h3>
-            {worker.verified && <VerifiedBadge />}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-stone-200">
+        {src ? (
+          <Foto
+            src={src}
+            alt={worker.name}
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-6xl font-bold text-stone-400">
+            {worker.name[0]}
           </div>
-          <p className="text-sm text-stone-500">
-            {worker.yearsExperience} años de experiencia
-            {worker.rating != null && (
-              <>
-                {" · "}
-                <Stars rating={worker.rating} /> ({worker.reviewCount})
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-      <p className="line-clamp-2 text-base text-stone-600">{worker.bio}</p>
-      <ServiceChips services={worker.services} />
-      <div className="flex items-center justify-between border-t border-stone-100 pt-3">
-        <span className="text-sm text-stone-500">{worker.zones.slice(0, 3).join(" · ")}</span>
-        <span className="font-semibold text-emerald-700">
+        )}
+        {worker.verified && (
+          <span className="absolute left-3 top-3">
+            <VerifiedBadge />
+          </span>
+        )}
+        <span className="absolute bottom-3 right-3 rounded-full bg-white/95 px-3 py-1.5 text-base font-bold text-emerald-800 shadow">
           {formatARS(worker.hourlyRate)}/h
         </span>
+      </div>
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="text-xl font-bold text-stone-900">{worker.name}</h3>
+          {worker.rating != null && (
+            <span className="shrink-0 text-base font-semibold text-stone-700">
+              ★ {worker.rating}{" "}
+              <span className="font-normal text-stone-400">({worker.reviewCount})</span>
+            </span>
+          )}
+        </div>
+        <p className="text-base text-stone-500">
+          {worker.yearsExperience} años de experiencia · {worker.zones.slice(0, 2).join(", ")}
+          {worker.zones.length > 2 && ` +${worker.zones.length - 2}`}
+        </p>
+        <p className="line-clamp-2 text-base text-stone-600">{worker.bio}</p>
+        <div className="mt-auto pt-1">
+          <ServiceChips services={worker.services} />
+        </div>
       </div>
     </Link>
   );

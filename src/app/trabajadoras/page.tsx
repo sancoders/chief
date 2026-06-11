@@ -1,17 +1,26 @@
 import { listWorkers } from "@/lib/workers";
+import { getSessionUser } from "@/lib/auth";
 import { WorkerCard } from "@/components/ui";
+import { VerificationGate } from "@/components/gate";
 import { SERVICES, ZONES } from "@/lib/constants";
 
 export const metadata = { title: "Buscar ayuda" };
 
 const selectClass =
-  "rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-emerald-500 focus:outline-none";
+  "h-12 rounded-xl border border-stone-300 bg-white px-3 text-base text-stone-900 focus:border-emerald-600 focus:outline-none";
 
 export default async function WorkersPage({
   searchParams,
 }: {
   searchParams: Promise<{ zona?: string; servicio?: string; tarifa?: string }>;
 }) {
+  const user = await getSessionUser();
+
+  // Comunidad cerrada: solo cuentas verificadas ven los perfiles.
+  if (!user || user.verificationStatus !== "VERIFICADA") {
+    return <VerificationGate status={user ? user.verificationStatus : null} />;
+  }
+
   const params = await searchParams;
   const maxRate = params.tarifa ? Number(params.tarifa) : undefined;
   const workers = await listWorkers({
@@ -21,16 +30,17 @@ export default async function WorkersPage({
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-stone-900">Buscar ayuda</h1>
-      <p className="mt-1 text-stone-600">
-        Todas las trabajadoras publicadas están verificadas: identidad validada,
-        entrevista y referencias.
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <h1 className="text-3xl font-extrabold tracking-tight text-stone-900">
+        Buscar ayuda
+      </h1>
+      <p className="mt-1 text-base text-stone-600">
+        Todas con identidad verificada: DNI, dirección y entrevista. ✓
       </p>
 
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+      <form method="get" className="mt-5 flex flex-wrap items-end gap-3">
         <div>
-          <label htmlFor="zona" className="mb-1 block text-xs font-medium text-stone-500">
+          <label htmlFor="zona" className="mb-1 block text-sm font-medium text-stone-500">
             Zona
           </label>
           <select id="zona" name="zona" defaultValue={params.zona ?? ""} className={selectClass}>
@@ -43,7 +53,7 @@ export default async function WorkersPage({
           </select>
         </div>
         <div>
-          <label htmlFor="servicio" className="mb-1 block text-xs font-medium text-stone-500">
+          <label htmlFor="servicio" className="mb-1 block text-sm font-medium text-stone-500">
             Servicio
           </label>
           <select
@@ -61,8 +71,8 @@ export default async function WorkersPage({
           </select>
         </div>
         <div>
-          <label htmlFor="tarifa" className="mb-1 block text-xs font-medium text-stone-500">
-            Tarifa máxima por hora
+          <label htmlFor="tarifa" className="mb-1 block text-sm font-medium text-stone-500">
+            Tarifa máxima
           </label>
           <select
             id="tarifa"
@@ -71,26 +81,26 @@ export default async function WorkersPage({
             className={selectClass}
           >
             <option value="">Sin límite</option>
-            <option value="5000">Hasta $5.000</option>
-            <option value="7000">Hasta $7.000</option>
-            <option value="10000">Hasta $10.000</option>
+            <option value="5000">Hasta $5.000/h</option>
+            <option value="7000">Hasta $7.000/h</option>
+            <option value="10000">Hasta $10.000/h</option>
           </select>
         </div>
         <button
           type="submit"
-          className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="h-12 rounded-xl bg-emerald-700 px-6 text-base font-semibold text-white hover:bg-emerald-800"
         >
           Filtrar
         </button>
       </form>
 
       {workers.length === 0 ? (
-        <div className="mt-12 rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center text-stone-500">
+        <div className="mt-12 rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center text-base text-stone-500">
           No encontramos trabajadoras con esos filtros todavía. Probá ampliar la
           búsqueda o volvé pronto: sumamos perfiles nuevos todas las semanas.
         </div>
       ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {workers.map((worker) => (
             <WorkerCard key={worker.id} worker={worker} />
           ))}
