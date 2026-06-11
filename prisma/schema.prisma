@@ -1,17 +1,19 @@
 // Esquema de datos de Caseras (marketplace de servicio doméstico).
-// SQLite para desarrollo; para producción cambiar provider a "postgresql"
-// y regenerar migraciones (ver README).
+// Postgres de Supabase en desarrollo y producción (ver README).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+  // Pooler en modo transacción (puerto 6543): lo usa la app, apto serverless.
   url      = env("DATABASE_URL")
+  // Pooler en modo sesión (puerto 5432): lo usa la CLI (db push / seed).
+  directUrl = env("DIRECT_URL")
 }
 
-// SQLite no soporta enums en Prisma, por eso los campos de rol/estado son String.
+// Roles y estados como String (sin enums) para mantener el schema simple.
 // Valores válidos en src/lib/constants.ts.
 
 model User {

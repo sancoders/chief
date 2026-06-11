@@ -43,8 +43,9 @@ next-env.d.ts
 # SQLite local
 prisma/dev.db
 
-# excepción: .env solo tiene valores de desarrollo (sin secretos reales)
-!.env
+# el .env real queda fuera del repo (lleva la contraseña de Supabase);
+# copiá .env.example a .env y completá tus valores
+!.env.example
 
 # documentos de verificación (DNI) — nunca commitear
 uploads/

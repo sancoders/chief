@@ -26,12 +26,25 @@ CABA / GBA.
 
 ## Correr el proyecto
 
+La base es el **Postgres de [Supabase](https://supabase.com)** (plan gratis),
+tanto en desarrollo como en producción:
+
+1. Creá un proyecto en Supabase (región **South America (São Paulo)** es la
+   más cercana). Elegí una contraseña de base solo con letras y números.
+2. En el dashboard: **Connect → ORMs → Prisma** y copiá las dos connection
+   strings a tu `.env` local (plantilla en `.env.example`): la de transacción
+   (`:6543`, con `?pgbouncer=true`) en `DATABASE_URL` y la de sesión (`:5432`)
+   en `DIRECT_URL`.
+
 ```bash
 npm install
-npm run db:push   # crea la base SQLite (prisma/dev.db)
+npm run db:push   # crea las tablas en Supabase
 npm run db:seed   # carga datos de demostración
 npm run dev       # http://localhost:3000
 ```
+
+> El plan gratis pausa el proyecto tras ~1 semana sin uso; se despierta con
+> un click en el dashboard ("Restore").
 
 ### Cuentas de demo (contraseña: `demo1234`)
 
@@ -63,12 +76,13 @@ service worker y pantalla offline). Requiere el server corrido en :3100
 
 > El recorrido muta datos (verifica usuarios, crea reservas): antes de
 > repetirlo, resembrá desde cero con
-> `rm -f prisma/dev.db && npm run db:push && npm run db:seed`.
+> `npx prisma db push --force-reset && npm run db:seed`.
+> (Borra TODO en esa base: usalo solo contra tu Supabase de desarrollo.)
 
 ## Stack
 
 - **Next.js 16** (App Router, Server Components, Server Actions) + Tailwind 4
-- **Prisma 6 + SQLite** en desarrollo
+- **Prisma 6 + Postgres** (Supabase)
 - Sesiones JWT en cookie httpOnly (`jose`) + `bcryptjs`
 - Validación con `zod`
 
@@ -86,19 +100,24 @@ src/app/                 Páginas: landing, búsqueda, detalle, reserva, panel
 
 ## Deploy a producción (Vercel)
 
-SQLite no persiste en serverless. Antes de deployar:
+La base ya vive en Supabase, así que solo hay que apuntar Vercel a ella:
 
-1. Crear un Postgres (Neon desde el marketplace de Vercel es lo más simple).
-2. En `prisma/schema.prisma` cambiar `provider = "sqlite"` por
-   `provider = "postgresql"`.
-3. Setear en Vercel las variables `DATABASE_URL` (la de Neon) y `AUTH_SECRET`
-   (un secreto largo y aleatorio: `openssl rand -hex 32`).
-4. `npx prisma db push` contra esa base y correr el seed si querés demo data.
+1. Importar el repo en [vercel.com](https://vercel.com) (Add New Project).
+2. Setear las variables de entorno `DATABASE_URL` y `DIRECT_URL` (las mismas
+   de tu `.env`) y `AUTH_SECRET` (uno nuevo, largo y aleatorio:
+   `openssl rand -hex 32`).
+3. Deploy. Las tablas y los datos ya están porque `db:push`/`db:seed` corren
+   contra Supabase desde tu máquina.
+
+> Antes de tener usuarios reales conviene separar desarrollo y producción en
+> dos proyectos de Supabase (el plan gratis incluye dos) para que los tests
+> no toquen datos reales.
 
 > Nota: los documentos subidos van al directorio `uploads/` (gitignoreado).
 > En Vercel el filesystem es efímero: para producción hay que moverlos a
-> Vercel Blob o S3 (cambiar `saveImage` en `src/app/actions/verification.ts`
-> y la lectura en `src/app/api/docs/[file]/route.ts`).
+> **Supabase Storage** (cambiar `saveImage` en
+> `src/app/actions/verification.ts` y la lectura en
+> `src/app/api/docs/[file]/route.ts`).
 
 ## App instalable y Play Store
 
@@ -134,7 +153,7 @@ Activity): se actualiza sola con cada deploy web, sin nueva revisión.
       la desintermediación junto con seguro/garantía)
 - [ ] Notificaciones al recibir o aceptar solicitudes: push (el service
       worker ya trae los handlers; falta VAPID + suscripciones), WhatsApp/email
-- [ ] Storage de documentos en Vercel Blob/S3 para producción
+- [ ] Storage de documentos en Supabase Storage para producción
 - [ ] Disponibilidad horaria y calendario de la trabajadora
 - [ ] Chat interno (evitar compartir teléfono hasta la aceptación)
 - [ ] Búsqueda por geolocalización y más zonas
