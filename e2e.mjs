@@ -136,5 +136,20 @@ await page.waitForLoadState("networkidle");
 await page.screenshot({ path: `${SHOTS}/12-perfil.png`, fullPage: true });
 ok("cerrar sesión al fondo", await page.isVisible("text=Cerrar sesión"));
 
+// 9. PWA: manifest linkeado, service worker activo y fallback offline
+ok("link rel=manifest", (await page.locator('link[rel="manifest"]').count()) > 0);
+ok("meta theme-color", (await page.locator('meta[name="theme-color"]').count()) > 0);
+ok("apple-touch-icon", (await page.locator('link[rel="apple-touch-icon"]').count()) > 0);
+const swState = await page.evaluate(async () => {
+  const reg = await navigator.serviceWorker.ready;
+  return reg.active?.state;
+});
+ok("service worker activo", swState === "activated");
+await context.setOffline(true);
+await page.goto(`${BASE}/trabajadoras`).catch(() => {});
+ok("fallback offline", await page.isVisible("text=Sin conexión"));
+await page.screenshot({ path: `${SHOTS}/13-offline.png` });
+await context.setOffline(false);
+
 await browser.close();
 console.log(results.join("\n"));

@@ -57,8 +57,13 @@ menú de perfil desplegable. Probalo con el inspector en viewport ~390px.
 
 `npm run test:e2e` corre un recorrido completo con navegador real (Playwright,
 viewport de celular): verificación con subida de documentos, aprobación del
-admin, búsqueda, reserva y aceptación. Requiere el server corrido en :3100
+admin, búsqueda, reserva y aceptación, más los chequeos de PWA (manifest,
+service worker y pantalla offline). Requiere el server corrido en :3100
 (`npm run build && npm start -- -p 3100`) y deja capturas en `/tmp/shots`.
+
+> El recorrido muta datos (verifica usuarios, crea reservas): antes de
+> repetirlo, resembrá desde cero con
+> `rm -f prisma/dev.db && npm run db:push && npm run db:seed`.
 
 ## Stack
 
@@ -95,11 +100,40 @@ SQLite no persiste en serverless. Antes de deployar:
 > Vercel Blob o S3 (cambiar `saveImage` en `src/app/actions/verification.ts`
 > y la lectura en `src/app/api/docs/[file]/route.ts`).
 
+## App instalable y Play Store
+
+Caseras es una **PWA**: con el sitio deployado en HTTPS, Android y desktop
+ofrecen "Instalar app" / "Agregar a pantalla de inicio" sin pasar por ninguna
+tienda. Lo que ya está en el repo:
+
+- `src/app/manifest.ts` — web app manifest (nombre, colores, íconos maskable)
+- `public/sw.js` — service worker: pantalla offline (`public/offline.html`)
+  y handlers de push listos para cuando se configuren claves VAPID
+- `scripts/icons.mjs` — regenera todos los íconos si cambia la marca
+  (`node scripts/icons.mjs`)
+
+### Publicar en Google Play (TWA)
+
+La app de Play Store es un envoltorio del sitio deployado (Trusted Web
+Activity): se actualiza sola con cada deploy web, sin nueva revisión.
+
+1. Deployar a producción (ver sección anterior) con dominio propio.
+2. `npm i -g @bubblewrap/cli && bubblewrap init --manifest https://TUDOMINIO/manifest.webmanifest`
+   y después `bubblewrap build` → genera el `.aab` para subir y el
+   `assetlinks.json`, que hay que servir en
+   `public/.well-known/assetlinks.json` (saca la barra del navegador).
+3. Cuenta de [Play Console](https://play.google.com/console) (USD 25 una vez).
+   Ojo: las cuentas personales nuevas necesitan una **prueba cerrada con 12
+   testers durante 14 días** antes de poder publicar en producción.
+4. Completar política de privacidad, formulario de seguridad de datos y
+   clasificación de contenido, y mandar a revisión (días, hasta una semana).
+
 ## Roadmap sugerido
 
 - [ ] Pagos con Mercado Pago (cobrar la tarifa de servicio online; mitiga
       la desintermediación junto con seguro/garantía)
-- [ ] Notificaciones por WhatsApp/email al recibir o aceptar solicitudes
+- [ ] Notificaciones al recibir o aceptar solicitudes: push (el service
+      worker ya trae los handlers; falta VAPID + suscripciones), WhatsApp/email
 - [ ] Storage de documentos en Vercel Blob/S3 para producción
 - [ ] Disponibilidad horaria y calendario de la trabajadora
 - [ ] Chat interno (evitar compartir teléfono hasta la aceptación)
