@@ -4,8 +4,11 @@ import { Foto } from "@/components/foto";
 import { getSession } from "@/lib/auth";
 
 // ── Assets de marketing ──────────────────────────────────────────────
-// La sección de confianza usa FEATURE_IMAGE; para reemplazarla por arte
-// propio, poné el archivo en public/ y apuntá acá (p. ej. "/cocina.jpg").
+// HERO_VIDEO: loop corto sin sonido en public/ (H.264). HERO_POSTER se
+// muestra mientras carga o si el navegador bloquea el autoplay (vacío =
+// fondo verde liso). FEATURE_IMAGE: foto de la sección de confianza.
+const HERO_VIDEO = "/hero.mp4";
+const HERO_POSTER = "";
 const FEATURE_IMAGE =
   "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=70";
 
@@ -65,22 +68,32 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero claro: una sola paleta (texto stone + acento esmeralda) */}
-      <section className="relative overflow-hidden">
+      {/* Hero verde con video de fondo; una sola paleta (blanco + esmeralda) */}
+      <section className="relative isolate overflow-hidden bg-emerald-950">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          src={HERO_VIDEO}
+          poster={HERO_POSTER || undefined}
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+        />
         <div
           aria-hidden
-          className="absolute -top-28 right-[-15%] -z-10 h-96 w-96 rounded-full bg-emerald-200/50 blur-3xl"
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-emerald-950/95 via-emerald-950/65 to-emerald-950/35"
         />
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-10 sm:pt-16 md:grid-cols-[1.1fr_1fr]">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-12 sm:pt-20 md:grid-cols-[1.1fr_1fr]">
           <div>
-            <p className="inline-block rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-emerald-800">
+            <p className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-white">
               Comunidad 100% verificada
             </p>
-            <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-6xl">
+            <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
               La ayuda para tu casa,{" "}
-              <span className="text-emerald-700">con nombre y cara</span>
+              <span className="text-emerald-300">con nombre y cara</span>
             </h1>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-stone-600">
+            <p className="mt-4 max-w-xl text-lg leading-relaxed text-white/85">
               Trabajadoras con DNI verificado, foto real y reseñas de familias
               como la tuya.
             </p>
@@ -89,13 +102,13 @@ export default async function HomePage() {
                 <>
                   <Link
                     href="/registro"
-                    className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
+                    className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
                   >
                     Buscar ayuda
                   </Link>
                   <Link
                     href="/registro?rol=trabajadora"
-                    className="rounded-2xl border border-stone-300 bg-white px-7 py-4 text-center text-lg font-bold text-stone-700 transition hover:border-emerald-600 hover:text-emerald-800"
+                    className="rounded-2xl border-2 border-white/70 px-7 py-4 text-center text-lg font-bold text-white transition hover:bg-white/10"
                   >
                     Quiero trabajar
                   </Link>
@@ -103,13 +116,13 @@ export default async function HomePage() {
               ) : (
                 <Link
                   href={isWorker ? "/panel" : "/trabajadoras"}
-                  className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
+                  className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
                 >
                   {isWorker ? "Ver mis solicitudes" : "Buscar trabajadoras"}
                 </Link>
               )}
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-1.5 text-sm font-medium text-stone-500">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-1.5 text-sm font-medium text-white/75">
               <span>✓ DNI verificado</span>
               <span>✓ Dirección validada</span>
               <span>✓ Reseñas reales</span>
