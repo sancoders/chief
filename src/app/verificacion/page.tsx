@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { VerificationForm } from "@/components/forms";
+import { CONTACT_WHATSAPP, whatsappUrl } from "@/lib/constants";
 
 export const metadata = { title: "Verificación de identidad" };
 
@@ -49,6 +50,28 @@ export default async function VerificationPage() {
             Los estamos revisando — suele tomar menos de 1 día hábil. Te
             avisamos por WhatsApp al {user.phone} apenas esté lista.
           </p>
+        </div>
+      )}
+
+      {status === "ENTREVISTA" && (
+        <div className="mt-6 rounded-2xl bg-amber-50 p-6 text-base leading-relaxed text-amber-900">
+          <strong>¡Tus documentos están aprobados! ✓</strong>
+          <p className="mt-2">
+            Último paso: una charla de bienvenida de 10 minutos para
+            conocernos — la hacemos con cada persona que entra a la comunidad,
+            de los dos lados.
+            {!CONTACT_WHATSAPP &&
+              ` Te escribimos por WhatsApp al ${user.phone} para coordinarla.`}
+          </p>
+          {CONTACT_WHATSAPP && (
+            <a
+              href={whatsappUrl(CONTACT_WHATSAPP, "¡Hola! Quiero coordinar la charla de bienvenida de Caseras.")}
+              target="_blank"
+              className="mt-4 inline-block rounded-xl bg-emerald-700 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-800"
+            >
+              Coordinar por WhatsApp →
+            </a>
+          )}
         </div>
       )}
 

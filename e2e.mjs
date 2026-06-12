@@ -67,7 +67,28 @@ await page.screenshot({ path: `${SHOTS}/03-gate-sindocs.png` });
 
 await page.goto(`${BASE}/verificacion`);
 await page.screenshot({ path: `${SHOTS}/04-verificacion-form.png`, fullPage: true });
-await page.setInputFiles('input[name="photo"]', "/tmp/foto.png");
+// Foto de perfil "de celular": ruido de ~10MB para probar la compresión
+// client-side (el bug real de producción era el 413 por fotos pesadas).
+const bigPhoto = await page.evaluate(() => {
+  const c = document.createElement("canvas");
+  c.width = 2400;
+  c.height = 1800;
+  const ctx = c.getContext("2d");
+  const img = ctx.createImageData(c.width, c.height);
+  for (let i = 0; i < img.data.length; i++) img.data[i] = (Math.random() * 256) | 0;
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL("image/png").split(",")[1];
+});
+fs.writeFileSync("/tmp/foto-grande.png", Buffer.from(bigPhoto, "base64"));
+await page.setInputFiles('input[name="photo"]', "/tmp/foto-grande.png");
+await page.waitForFunction(
+  () => {
+    const f = document.querySelector('input[name="photo"]').files[0];
+    return f && f.size < 2 * 1024 * 1024;
+  },
+  { timeout: 20000 },
+);
+ok("foto pesada comprimida en el cliente", true);
 await page.fill("#dniNumber", "34555666");
 await page.setInputFiles('input[name="docFront"]', "/tmp/foto.png");
 await page.setInputFiles('input[name="docBack"]', "/tmp/foto.png");
@@ -80,25 +101,40 @@ ok("verificación enviada", await page.isVisible("text=Recibimos tus documentos"
 await page.screenshot({ path: `${SHOTS}/05-enviada.png` });
 await logout(page);
 
-// 4. Admin verifica a Martín
+// 4. Admin aprueba los documentos → queda pendiente la charla de bienvenida
 await login(page, "admin@caseras.ar");
 ok("admin ve a Martín en revisión", await page.isVisible("text=Martín López"));
 await page.screenshot({ path: `${SHOTS}/06-admin-cola.png`, fullPage: true });
-const card = page.locator("div.rounded-2xl", { hasText: "Martín López" }).first();
-await card.locator("text=Verificar ✓").click();
+const card = () =>
+  page.locator("div.rounded-2xl", { hasText: "Martín López" }).first();
+await card().locator("text=Aprobar docs").click();
+await page.waitForTimeout(1500);
+ok("Martín pasa a charla", await card().locator("text=Charla hecha").isVisible());
+await logout(page);
+
+// 4b. Martín ve el aviso de la charla de bienvenida
+await login(page, "nuevo@demo.caseras.ar");
+ok("banner de charla", await page.isVisible("text=charla de bienvenida"));
+await page.screenshot({ path: `${SHOTS}/06b-charla.png` });
+await logout(page);
+
+// 4c. Admin confirma la charla → verificada
+await login(page, "admin@caseras.ar");
+await card().locator("text=Charla hecha").click();
 await page.waitForTimeout(1500);
 ok(
   "Martín verificado",
-  await page
-    .locator("div.rounded-2xl", { hasText: "Martín López" })
-    .first()
-    .locator("text=Quitar verificación")
-    .isVisible(),
+  await card().locator("text=Quitar verificación").isVisible(),
 );
 await logout(page);
 
 // 5. Martín (ya verificado) ve el directorio con fotos
 await login(page, "nuevo@demo.caseras.ar");
+// La landing logueada no recluta: sin "Quiero trabajar", con CTA propio.
+await page.goto(BASE);
+await page.waitForLoadState("networkidle");
+ok("landing logueada sin reclutamiento", !(await page.isVisible("text=Quiero trabajar")));
+ok("landing logueada con CTA propio", await page.isVisible("text=Buscar trabajadoras"));
 await page.goto(`${BASE}/trabajadoras`);
 await page.waitForLoadState("networkidle");
 ok("directorio visible verificado", await page.isVisible("text=María Gómez"));

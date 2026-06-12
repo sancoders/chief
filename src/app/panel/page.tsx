@@ -8,8 +8,10 @@ import { Avatar, StatusBadge } from "@/components/ui";
 import { ReviewForm } from "@/components/forms";
 import {
   BOOKING_TYPES,
+  CONTACT_WHATSAPP,
   VERIFICATION_STATUSES,
   formatARS,
+  whatsappUrl,
   type BookingType,
   type VerificationStatus,
 } from "@/lib/constants";
@@ -81,6 +83,27 @@ function VerifyBanner({ status, note }: { status: string; note: string }) {
           <strong>Tus documentos están en revisión.</strong> Te avisamos por
           WhatsApp apenas esté lista (menos de 1 día hábil).
         </p>
+      )}
+      {status === "ENTREVISTA" && (
+        <>
+          <p className="text-base font-bold text-amber-900">
+            ¡Tus documentos están aprobados! ✓
+          </p>
+          <p className="mt-1 text-base text-amber-800">
+            Último paso: una charla de bienvenida de 10 minutos para
+            conocernos — la hacemos con cada persona que entra a la comunidad.
+            {!CONTACT_WHATSAPP && " Te escribimos por WhatsApp para coordinarla."}
+          </p>
+          {CONTACT_WHATSAPP && (
+            <a
+              href={whatsappUrl(CONTACT_WHATSAPP, "¡Hola! Quiero coordinar la charla de bienvenida de Caseras.")}
+              target="_blank"
+              className="mt-3 inline-block rounded-xl bg-emerald-700 px-5 py-3 text-base font-semibold text-white hover:bg-emerald-800"
+            >
+              Coordinar por WhatsApp →
+            </a>
+          )}
+        </>
       )}
       {status === "RECHAZADA" && (
         <>
@@ -382,9 +405,10 @@ async function WorkerPanel(user: {
 
 const STATUS_ORDER: Record<string, number> = {
   EN_REVISION: 0,
-  RECHAZADA: 1,
-  SIN_DOCS: 2,
-  VERIFICADA: 3,
+  ENTREVISTA: 1,
+  RECHAZADA: 2,
+  SIN_DOCS: 3,
+  VERIFICADA: 4,
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -395,6 +419,7 @@ const ROLE_LABEL: Record<string, string> = {
 function StatusVerification({ status }: { status: string }) {
   const styles: Record<string, string> = {
     EN_REVISION: "bg-sky-100 text-sky-700",
+    ENTREVISTA: "bg-amber-100 text-amber-700",
     SIN_DOCS: "bg-stone-200 text-stone-600",
     RECHAZADA: "bg-rose-100 text-rose-700",
     VERIFICADA: "bg-emerald-100 text-emerald-700",
@@ -459,7 +484,7 @@ function AdminVerificationCard({
         <StatusVerification status={status} />
       </div>
 
-      {docs.length > 0 && status === "EN_REVISION" && (
+      {docs.length > 0 && ["EN_REVISION", "ENTREVISTA"].includes(status) && (
         <div className="mt-4 grid grid-cols-3 gap-2">
           {docs.map(([label, file]) => (
             <a
@@ -486,12 +511,12 @@ function AdminVerificationCard({
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <form action={resolveVerification}>
             <input type="hidden" name="userId" value={person.id} />
-            <input type="hidden" name="decision" value="VERIFICADA" />
+            <input type="hidden" name="decision" value="ENTREVISTA" />
             <button
               type="submit"
               className="rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800"
             >
-              Verificar ✓
+              Aprobar docs → charla
             </button>
           </form>
           <form action={resolveVerification} className="flex flex-1 gap-2">
@@ -502,6 +527,38 @@ function AdminVerificationCard({
               placeholder="Motivo del rechazo"
               className="h-11 min-w-40 flex-1 rounded-xl border border-stone-300 px-3 text-base"
             />
+            <button
+              type="submit"
+              className="rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50"
+            >
+              Rechazar
+            </button>
+          </form>
+        </div>
+      )}
+      {status === "ENTREVISTA" && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <a
+            href={whatsappUrl(person.phone, "¡Hola! Soy del equipo de Caseras: tus documentos ya están aprobados 🎉 ¿Cuándo te queda cómodo una videollamada de 10 minutos para conocernos?")}
+            target="_blank"
+            className="rounded-xl border border-emerald-300 px-4 py-2.5 text-base font-medium text-emerald-700 hover:bg-emerald-50"
+          >
+            Coordinar por WhatsApp
+          </a>
+          <form action={resolveVerification}>
+            <input type="hidden" name="userId" value={person.id} />
+            <input type="hidden" name="decision" value="VERIFICADA" />
+            <button
+              type="submit"
+              className="rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800"
+            >
+              Charla hecha, verificar ✓
+            </button>
+          </form>
+          <form action={resolveVerification}>
+            <input type="hidden" name="userId" value={person.id} />
+            <input type="hidden" name="decision" value="RECHAZADA" />
+            <input type="hidden" name="note" value="No superó la charla de bienvenida" />
             <button
               type="submit"
               className="rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50"

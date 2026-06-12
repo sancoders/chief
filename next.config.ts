@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // La verificación sube 4 fotos (comprimidas en el cliente a ~300KB
+      // c/u). El default de 1MB se queda corto; Vercel corta en ~4.5MB.
+      bodySizeLimit: "8mb",
+    },
+  },
   async headers() {
     return [
       {
