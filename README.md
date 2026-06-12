@@ -13,7 +13,10 @@ CABA / GBA.
   trabajadora) puede ver perfiles, reservar ni trabajar sin antes verificar
   su identidad en `/verificacion`: foto de perfil (pública y obligatoria),
   DNI frente/dorso, selfie con el DNI y dirección declarada (el admin la
-  valida contra el DNI). Estados: `SIN_DOCS → EN_REVISION → VERIFICADA/RECHAZADA`.
+  valida contra el DNI). Las fotos se comprimen en el navegador antes de
+  subir. Estados: `SIN_DOCS → EN_REVISION → ENTREVISTA (charla de
+  bienvenida con el equipo) → VERIFICADA/RECHAZADA`. El WhatsApp del equipo
+  para la charla se configura en `CONTACT_WHATSAPP` (`src/lib/constants.ts`).
   El admin aprueba o rechaza (con motivo) desde su panel. El DNI y la selfie
   se guardan fuera de `public/` y se sirven por `/api/docs` solo al admin o
   al dueño; la foto de perfil es pública vía `/api/foto`.

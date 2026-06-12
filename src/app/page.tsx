@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { APP_NAME } from "@/lib/constants";
 import { Foto } from "@/components/foto";
+import { getSession } from "@/lib/auth";
 
 // Retratos ilustrativos para la landing (placeholders de marketing).
 // Los perfiles reales solo se ven con cuenta verificada.
@@ -28,7 +29,13 @@ const STEPS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Con sesión iniciada la landing no vende registro: lleva a cada rol a lo
+  // suyo (cliente → buscar; trabajadora → su panel) y esconde las secciones
+  // de reclutamiento.
+  const session = await getSession();
+  const isWorker = session?.role === "WORKER";
+
   return (
     <div>
       {/* Hero */}
@@ -49,18 +56,29 @@ export default function HomePage() {
                 clientes serios, también verificados.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/registro"
-                  className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
-                >
-                  Buscar ayuda
-                </Link>
-                <Link
-                  href="/registro?rol=trabajadora"
-                  className="rounded-2xl border-2 border-orange-700 px-7 py-4 text-center text-lg font-bold text-orange-800 transition hover:bg-orange-50"
-                >
-                  Quiero trabajar
-                </Link>
+                {!session ? (
+                  <>
+                    <Link
+                      href="/registro"
+                      className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
+                    >
+                      Buscar ayuda
+                    </Link>
+                    <Link
+                      href="/registro?rol=trabajadora"
+                      className="rounded-2xl border-2 border-orange-700 px-7 py-4 text-center text-lg font-bold text-orange-800 transition hover:bg-orange-50"
+                    >
+                      Quiero trabajar
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    href={isWorker ? "/panel" : "/trabajadoras"}
+                    className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
+                  >
+                    {isWorker ? "Ver mis solicitudes" : "Buscar trabajadoras"}
+                  </Link>
+                )}
               </div>
             </div>
             {/* Collage de retratos */}
@@ -123,44 +141,50 @@ export default function HomePage() {
             anónimos, sin riesgos de más.
           </p>
           <Link
-            href="/registro"
+            href={!session ? "/registro" : isWorker ? "/panel" : "/trabajadoras"}
             className="mt-8 inline-block rounded-2xl bg-white px-8 py-4 text-lg font-bold text-emerald-900 transition hover:bg-emerald-50"
           >
-            Sumarme y verificarme
+            {!session
+              ? "Sumarme y verificarme"
+              : isWorker
+                ? "Ir a mi panel"
+                : "Ver trabajadoras"}
           </Link>
         </div>
       </section>
 
-      {/* Para trabajadoras */}
-      <section className="mx-auto max-w-6xl px-4 py-14">
-        <div className="overflow-hidden rounded-3xl bg-orange-700">
-          <div className="grid items-center md:grid-cols-2">
-            <div className="p-8 sm:p-12">
-              <h2 className="text-3xl font-extrabold tracking-tight text-white">
-                ¿Trabajás en casas particulares?
-              </h2>
-              <p className="mt-3 text-lg leading-relaxed text-orange-100">
-                Dejá de depender del boca a boca. Vos ponés tu tarifa, tus zonas
-                y tus horarios — y las familias que te contactan también están
-                verificadas con DNI. Registrarte es gratis.
-              </p>
-              <Link
-                href="/registro?rol=trabajadora"
-                className="mt-6 inline-block rounded-2xl bg-white px-7 py-4 text-lg font-bold text-orange-800 transition hover:bg-orange-50"
-              >
-                Crear mi perfil gratis
-              </Link>
-            </div>
-            <div className="hidden h-full min-h-72 md:block">
-              <Foto
-                src="https://randomuser.me/api/portraits/women/26.jpg"
-                alt="Trabajadora de la comunidad"
-                className="h-full w-full object-cover"
-              />
+      {/* Para trabajadoras: solo para visitas sin cuenta */}
+      {!session && (
+        <section className="mx-auto max-w-6xl px-4 py-14">
+          <div className="overflow-hidden rounded-3xl bg-orange-700">
+            <div className="grid items-center md:grid-cols-2">
+              <div className="p-8 sm:p-12">
+                <h2 className="text-3xl font-extrabold tracking-tight text-white">
+                  ¿Trabajás en casas particulares?
+                </h2>
+                <p className="mt-3 text-lg leading-relaxed text-orange-100">
+                  Dejá de depender del boca a boca. Vos ponés tu tarifa, tus zonas
+                  y tus horarios — y las familias que te contactan también están
+                  verificadas con DNI. Registrarte es gratis.
+                </p>
+                <Link
+                  href="/registro?rol=trabajadora"
+                  className="mt-6 inline-block rounded-2xl bg-white px-7 py-4 text-lg font-bold text-orange-800 transition hover:bg-orange-50"
+                >
+                  Crear mi perfil gratis
+                </Link>
+              </div>
+              <div className="hidden h-full min-h-72 md:block">
+                <Foto
+                  src="https://randomuser.me/api/portraits/women/26.jpg"
+                  alt="Trabajadora de la comunidad"
+                  className="h-full w-full object-cover"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Cierre */}
       <section className="px-4 pb-16 pt-4 text-center">
@@ -168,10 +192,10 @@ export default function HomePage() {
           {APP_NAME}: gente de confianza, de los dos lados de la puerta.
         </h2>
         <Link
-          href="/registro"
+          href={!session ? "/registro" : isWorker ? "/panel" : "/trabajadoras"}
           className="mt-6 inline-block rounded-2xl bg-emerald-700 px-8 py-4 text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
         >
-          Empezar ahora
+          {!session ? "Empezar ahora" : isWorker ? "Ir a mi panel" : "Buscar ayuda"}
         </Link>
       </section>
     </div>

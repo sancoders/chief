@@ -527,6 +527,31 @@ export function AddressForm() {
   );
 }
 
+// Las fotos de celular pesan varios MB y el request de la verificación lleva
+// cuatro: las reducimos en el navegador (máx 1600px, JPEG) antes de enviar.
+// Sobra resolución para revisar un DNI y evita el límite de ~4MB por request.
+async function compressImage(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.82),
+    );
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
+      type: "image/jpeg",
+    });
+  } catch {
+    // Formato que el navegador no decodifica: va original y lo valida el server.
+    return file;
+  }
+}
+
 function PhotoInput({ name, label }: { name: string; label: string }) {
   const [fileName, setFileName] = useState<string | null>(null);
   return (
@@ -547,7 +572,23 @@ function PhotoInput({ name, label }: { name: string; label: string }) {
           accept="image/*"
           required
           className="hidden"
-          onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+          onChange={async (e) => {
+            const input = e.target;
+            const file = input.files?.[0];
+            if (!file) {
+              setFileName(null);
+              return;
+            }
+            setFileName("Procesando foto…");
+            const compressed = await compressImage(file);
+            if (compressed !== file) {
+              const dt = new DataTransfer();
+              dt.items.add(compressed);
+              input.files = dt.files;
+            }
+            const mb = compressed.size / 1024 / 1024;
+            setFileName(`${file.name} · ${mb < 0.1 ? "menos de 0,1" : mb.toFixed(1).replace(".", ",")} MB`);
+          }}
         />
       </label>
     </div>

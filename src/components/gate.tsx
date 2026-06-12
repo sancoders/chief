@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /**
  * Pantalla de acceso restringido: la comunidad es verificada en ambos lados.
- * status: null = sin sesión; SIN_DOCS | EN_REVISION | RECHAZADA según el usuario.
+ * status: null = sin sesión; SIN_DOCS | EN_REVISION | ENTREVISTA | RECHAZADA según el usuario.
  */
 export function VerificationGate({ status }: { status: string | null }) {
   return (
@@ -64,6 +64,18 @@ export function VerificationGate({ status }: { status: string | null }) {
               Recibimos tus documentos. La revisión suele tomar menos de 1 día
               hábil; te avisamos por WhatsApp apenas esté lista. Después vas a
               poder ver todos los perfiles y reservar.
+            </p>
+          </>
+        )}
+        {status === "ENTREVISTA" && (
+          <>
+            <h1 className="mt-5 text-2xl font-extrabold text-stone-900">
+              ¡Tus documentos están aprobados!
+            </h1>
+            <p className="mt-3 text-base leading-relaxed text-stone-600">
+              Falta el último paso: una charla de bienvenida de 10 minutos
+              para conocernos. La hacemos con cada persona que entra a la
+              comunidad. Te escribimos por WhatsApp para coordinarla.
             </p>
           </>
         )}

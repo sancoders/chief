@@ -18,10 +18,20 @@ export type BookingType = keyof typeof BOOKING_TYPES;
 export const VERIFICATION_STATUSES = {
   SIN_DOCS: "Falta documentación",
   EN_REVISION: "En revisión",
+  ENTREVISTA: "Charla pendiente",
   VERIFICADA: "Verificada",
   RECHAZADA: "Rechazada",
 } as const;
 export type VerificationStatus = keyof typeof VERIFICATION_STATUSES;
+
+// WhatsApp del equipo para la charla de bienvenida (con código de país).
+// Vacío = los banners dicen que el equipo escribe; con número muestran botón.
+export const CONTACT_WHATSAPP = "";
+
+export function whatsappUrl(phone: string, text?: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+}
 
 export const BOOKING_STATUSES = {
   PENDIENTE: "Pendiente",
