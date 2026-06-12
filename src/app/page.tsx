@@ -4,21 +4,43 @@ import { Foto } from "@/components/foto";
 import { getSession } from "@/lib/auth";
 
 // ── Assets de marketing ──────────────────────────────────────────────
-// Para reemplazar por arte propio (p. ej. generado con Higgsfield):
-// poné los archivos en public/ y cambiá estas constantes, p. ej.
-// HERO_IMAGE = "/hero.jpg" y HERO_VIDEO = "/hero.mp4" (loop corto, sin
-// audio). Con HERO_VIDEO seteado, el hero usa el video; si no, la foto.
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1600&q=70";
+// Para sumar un video de fondo al hero (p. ej. generado con IA): poné el
+// archivo en public/ y seteá HERO_VIDEO = "/hero.mp4" (loop corto, sin
+// audio). La sección de confianza usa FEATURE_IMAGE.
 const HERO_VIDEO = "";
 const FEATURE_IMAGE =
   "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=70";
 
-// Retratos de la comunidad (con fallback local en public/demo).
-const COMMUNITY = [
-  "https://randomuser.me/api/portraits/women/65.jpg",
-  "https://randomuser.me/api/portraits/women/44.jpg",
-  "https://randomuser.me/api/portraits/women/68.jpg",
+// Tarjetas ilustrativas del hero: caras reales con nombre, como se ven los
+// perfiles adentro. Retratos de demostración (fallback local en public/demo).
+const PEOPLE = [
+  {
+    src: "https://randomuser.me/api/portraits/women/65.jpg",
+    name: "Rosa",
+    service: "Limpieza",
+    zone: "Palermo",
+    rating: "4,9",
+    tilt: "-rotate-3",
+    floatDelay: "",
+  },
+  {
+    src: "https://randomuser.me/api/portraits/women/44.jpg",
+    name: "María",
+    service: "Cocina",
+    zone: "Belgrano",
+    rating: "5,0",
+    tilt: "rotate-2 translate-y-3",
+    floatDelay: "floaty-d1",
+  },
+  {
+    src: "https://randomuser.me/api/portraits/women/68.jpg",
+    name: "Norma",
+    service: "Planchado",
+    zone: "Caballito",
+    rating: "4,8",
+    tilt: "-rotate-1",
+    floatDelay: "floaty-d2",
+  },
 ];
 
 const STEPS = [
@@ -45,83 +67,107 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero con foto/video de fondo */}
+      {/* Hero: caras reales con nombre, la promesa de la marca */}
       <section className="relative isolate overflow-hidden bg-emerald-950">
-        {HERO_VIDEO ? (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={HERO_IMAGE}
-            src={HERO_VIDEO}
-            className="absolute inset-0 -z-20 h-full w-full object-cover"
-          />
-        ) : (
-          <div
-            aria-hidden
-            className="kenburns absolute inset-0 -z-20 bg-cover bg-center"
-            style={{ backgroundImage: `url(${HERO_IMAGE})` }}
-          />
+        {HERO_VIDEO && (
+          <>
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              src={HERO_VIDEO}
+              className="absolute inset-0 -z-20 h-full w-full object-cover"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 -z-10 bg-gradient-to-t from-emerald-950/95 via-emerald-950/70 to-emerald-900/40"
+            />
+          </>
         )}
+        {/* Brillos suaves de fondo */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-t from-emerald-950/95 via-emerald-950/60 to-emerald-900/25"
+          className="absolute -top-24 right-[-10%] -z-10 h-96 w-96 rounded-full bg-orange-400/15 blur-3xl"
         />
-        <div className="mx-auto flex min-h-[76vh] max-w-6xl flex-col justify-end px-4 pb-12 pt-28 sm:min-h-[80vh] sm:pb-16">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2.5">
-              {COMMUNITY.map((src) => (
-                <Foto
-                  key={src}
-                  src={src}
-                  alt="Trabajadora de la comunidad"
-                  className="h-9 w-9 rounded-full border-2 border-emerald-100 object-cover"
-                />
-              ))}
-            </div>
-            <p className="text-sm font-bold uppercase tracking-wide text-emerald-100">
+        <div
+          aria-hidden
+          className="absolute bottom-[-20%] left-[-10%] -z-10 h-96 w-96 rounded-full bg-emerald-500/15 blur-3xl"
+        />
+        <div className="mx-auto grid min-h-[72vh] max-w-6xl items-center gap-12 px-4 pb-14 pt-24 sm:pb-16 md:grid-cols-[1.1fr_1fr]">
+          <div>
+            <p className="inline-block rounded-full bg-emerald-400/15 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-emerald-200">
               Comunidad 100% verificada
             </p>
-          </div>
-          <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
-            La ayuda para tu casa,{" "}
-            <span className="text-orange-300">con nombre y cara</span>
-          </h1>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-emerald-50/90">
-            Trabajadoras con DNI verificado, foto real y reseñas de familias
-            como la tuya.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            {!session ? (
-              <>
+            <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
+              La ayuda para tu casa,{" "}
+              <span className="text-orange-300">con nombre y cara</span>
+            </h1>
+            <p className="mt-4 max-w-xl text-lg leading-relaxed text-emerald-50/90">
+              Trabajadoras con DNI verificado, foto real y reseñas de familias
+              como la tuya.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              {!session ? (
+                <>
+                  <Link
+                    href="/registro"
+                    className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
+                  >
+                    Buscar ayuda
+                  </Link>
+                  <Link
+                    href="/registro?rol=trabajadora"
+                    className="rounded-2xl border-2 border-white/70 px-7 py-4 text-center text-lg font-bold text-white transition hover:bg-white/10"
+                  >
+                    Quiero trabajar
+                  </Link>
+                </>
+              ) : (
                 <Link
-                  href="/registro"
+                  href={isWorker ? "/panel" : "/trabajadoras"}
                   className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
                 >
-                  Buscar ayuda
+                  {isWorker ? "Ver mis solicitudes" : "Buscar trabajadoras"}
                 </Link>
-                <Link
-                  href="/registro?rol=trabajadora"
-                  className="rounded-2xl border-2 border-white/70 px-7 py-4 text-center text-lg font-bold text-white transition hover:bg-white/10"
-                >
-                  Quiero trabajar
-                </Link>
-              </>
-            ) : (
-              <Link
-                href={isWorker ? "/panel" : "/trabajadoras"}
-                className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
-              >
-                {isWorker ? "Ver mis solicitudes" : "Buscar trabajadoras"}
-              </Link>
-            )}
+              )}
+            </div>
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-1.5 text-sm font-medium text-emerald-100/80">
+              <span>✓ DNI verificado</span>
+              <span>✓ Dirección validada</span>
+              <span>✓ Reseñas reales</span>
+            </div>
           </div>
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-1.5 text-sm font-medium text-emerald-100/80">
-            <span>✓ DNI verificado</span>
-            <span>✓ Dirección validada</span>
-            <span>✓ Reseñas reales</span>
-            <span>✓ De los dos lados</span>
+          {/* Tarjetas de la comunidad */}
+          <div className="flex items-center justify-center pb-2">
+            <div className="flex -space-x-7 sm:-space-x-5">
+              {PEOPLE.map((person) => (
+                <div key={person.name} className={person.tilt}>
+                  <div
+                    className={`floaty ${person.floatDelay} w-32 rounded-2xl bg-white p-2 shadow-2xl sm:w-40`}
+                  >
+                    <Foto
+                      src={person.src}
+                      alt={`${person.name}, ${person.service.toLowerCase()} en ${person.zone}`}
+                      className="aspect-square w-full rounded-xl object-cover"
+                    />
+                    <div className="px-1 pb-1 pt-2">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-sm font-bold text-stone-900">
+                          {person.name}
+                        </span>
+                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                          ✓ Verificada
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-stone-500">
+                        {person.service} · {person.zone} · ★ {person.rating}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

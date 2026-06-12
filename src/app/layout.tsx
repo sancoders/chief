@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/header";
 import { SwRegister } from "@/components/sw-register";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// DM Sans: geométrica y cálida (la alternativa libre al estilo de las
+// tipografías de marketplaces como Airbnb), lejos de las defaults Geist/Inter.
+const dmSans = DM_Sans({
+  variable: "--font-app",
   subsets: ["latin"],
 });
 
@@ -33,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="es" className={`${dmSans.variable} h-full antialiased`}>
       <body className="flex min-h-screen flex-col">
         <SwRegister />
         <Header />

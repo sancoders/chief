@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-app);
 }
 
 html {
@@ -19,25 +19,33 @@ body {
   /* Crema cálido, look hogareño (no blanco clínico) */
   background: #faf6f0;
   color: #292524;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-app), system-ui, sans-serif;
 }
 
-/* Movimiento sutil del fondo del hero (zoom lento tipo Ken Burns). */
-@keyframes kenburns {
+/* Flotación sutil de las tarjetas del hero. */
+@keyframes floaty {
   from {
-    transform: scale(1);
+    transform: translateY(0);
   }
   to {
-    transform: scale(1.12);
+    transform: translateY(-8px);
   }
 }
 
-.kenburns {
-  animation: kenburns 26s ease-in-out infinite alternate;
+.floaty {
+  animation: floaty 5s ease-in-out infinite alternate;
+}
+
+.floaty-d1 {
+  animation-delay: 1.4s;
+}
+
+.floaty-d2 {
+  animation-delay: 2.8s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kenburns {
+  .floaty {
     animation: none;
   }
 }
