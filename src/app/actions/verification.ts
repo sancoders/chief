@@ -1,12 +1,10 @@
 "use server";
 
-import { mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
-import path from "node:path";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
-import { UPLOADS_DIR } from "@/lib/uploads";
+import { saveUpload } from "@/lib/uploads";
 import { ZONES } from "@/lib/constants";
 import type { FormState } from "./auth";
 
@@ -29,11 +27,7 @@ async function saveImage(
   if (file.size > MAX_SIZE) return { error: "Cada foto puede pesar hasta 8MB" };
 
   const name = prefix + randomBytes(16).toString("hex") + ext;
-  await mkdir(UPLOADS_DIR, { recursive: true });
-  await writeFile(
-    path.join(UPLOADS_DIR, name),
-    Buffer.from(await file.arrayBuffer()),
-  );
+  await saveUpload(name, Buffer.from(await file.arrayBuffer()), file.type);
   return name;
 }
 

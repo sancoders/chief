@@ -1,9 +1,8 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { UPLOADS_DIR } from "@/lib/uploads";
+import { readUpload } from "@/lib/uploads";
 
 const CONTENT_TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -35,15 +34,12 @@ export async function GET(
     }
   }
 
-  try {
-    const data = await readFile(path.join(UPLOADS_DIR, name));
-    return new NextResponse(new Uint8Array(data), {
-      headers: {
-        "Content-Type": CONTENT_TYPES[path.extname(name)] ?? "application/octet-stream",
-        "Cache-Control": "private, max-age=300",
-      },
-    });
-  } catch {
-    return new NextResponse("No encontrado", { status: 404 });
-  }
+  const data = await readUpload(name);
+  if (!data) return new NextResponse("No encontrado", { status: 404 });
+  return new NextResponse(new Uint8Array(data), {
+    headers: {
+      "Content-Type": CONTENT_TYPES[path.extname(name)] ?? "application/octet-stream",
+      "Cache-Control": "private, max-age=300",
+    },
+  });
 }
