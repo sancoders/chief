@@ -104,20 +104,39 @@ La base ya vive en Supabase, así que solo hay que apuntar Vercel a ella:
 
 1. Importar el repo en [vercel.com](https://vercel.com) (Add New Project).
 2. Setear las variables de entorno `DATABASE_URL` y `DIRECT_URL` (las mismas
-   de tu `.env`) y `AUTH_SECRET` (uno nuevo, largo y aleatorio:
-   `openssl rand -hex 32`).
-3. Deploy. Las tablas y los datos ya están porque `db:push`/`db:seed` corren
+   de tu `.env`), `AUTH_SECRET` (uno nuevo, largo y aleatorio:
+   `openssl rand -hex 32`), y para las subidas de fotos `SUPABASE_URL`
+   (`https://TU_PROYECTO.supabase.co`) y `SUPABASE_SERVICE_ROLE_KEY`
+   (Supabase → Settings → API keys).
+3. Crear el bucket privado de subidas y blindar la Data API, pegando esto en
+   el SQL Editor de Supabase:
+
+   ```sql
+   insert into storage.buckets (id, name, public)
+   values ('uploads', 'uploads', false)
+   on conflict (id) do nothing;
+
+   alter table "User" enable row level security;
+   alter table "WorkerProfile" enable row level security;
+   alter table "Booking" enable row level security;
+   alter table "Review" enable row level security;
+   alter table "Address" enable row level security;
+   ```
+
+   (El RLS no afecta a la app —Prisma entra como dueño de las tablas— pero
+   evita que la API REST pública de Supabase exponga los datos.)
+4. Deploy. Las tablas y los datos ya están porque `db:push`/`db:seed` corren
    contra Supabase desde tu máquina.
 
 > Antes de tener usuarios reales conviene separar desarrollo y producción en
 > dos proyectos de Supabase (el plan gratis incluye dos) para que los tests
 > no toquen datos reales.
 
-> Nota: los documentos subidos van al directorio `uploads/` (gitignoreado).
-> En Vercel el filesystem es efímero: para producción hay que moverlos a
-> **Supabase Storage** (cambiar `saveImage` en
-> `src/app/actions/verification.ts` y la lectura en
-> `src/app/api/docs/[file]/route.ts`).
+> Las fotos subidas (perfil, DNI, selfie) van al bucket privado `uploads`
+> de Supabase Storage cuando las variables están seteadas, o al directorio
+> local `uploads/` si no (desarrollo). El acceso siempre pasa por
+> `/api/foto` (públicas) y `/api/docs` (solo admin o dueño): ver
+> `src/lib/uploads.ts`.
 
 ## App instalable y Play Store
 
@@ -153,7 +172,6 @@ Activity): se actualiza sola con cada deploy web, sin nueva revisión.
       la desintermediación junto con seguro/garantía)
 - [ ] Notificaciones al recibir o aceptar solicitudes: push (el service
       worker ya trae los handlers; falta VAPID + suscripciones), WhatsApp/email
-- [ ] Storage de documentos en Supabase Storage para producción
 - [ ] Disponibilidad horaria y calendario de la trabajadora
 - [ ] Chat interno (evitar compartir teléfono hasta la aceptación)
 - [ ] Búsqueda por geolocalización y más zonas
