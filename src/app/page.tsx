@@ -8,7 +8,7 @@ import { getSession } from "@/lib/auth";
 // muestra mientras carga o si el navegador bloquea el autoplay (vacío =
 // fondo verde liso). FEATURE_IMAGE: foto de la sección de confianza.
 const HERO_VIDEO = "/hero.mp4";
-const HERO_POSTER = "";
+const HERO_POSTER = "/hero-poster.jpg";
 const FEATURE_IMAGE =
   "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=70";
 
@@ -70,6 +70,8 @@ export default async function HomePage() {
     <div>
       {/* Hero verde con video de fondo; una sola paleta (blanco + esmeralda) */}
       <section className="relative isolate overflow-hidden bg-emerald-950">
+        {/* 7,2% más alto que el contenedor: esconde las barras letterbox
+            que vienen grabadas en el video (3,5% arriba y abajo). */}
         <video
           autoPlay
           muted
@@ -78,7 +80,8 @@ export default async function HomePage() {
           preload="metadata"
           src={HERO_VIDEO}
           poster={HERO_POSTER || undefined}
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          style={{ top: "-3.6%", height: "107.2%" }}
+          className="absolute left-0 -z-20 w-full object-cover"
         />
         <div
           aria-hidden
