@@ -24,9 +24,10 @@ export const VERIFICATION_STATUSES = {
 } as const;
 export type VerificationStatus = keyof typeof VERIFICATION_STATUSES;
 
-// WhatsApp del equipo para la charla de bienvenida (con código de país).
+// WhatsApp del equipo para la charla de bienvenida (con código de país;
+// para celulares argentinos WhatsApp exige el 9 después del 54).
 // Vacío = los banners dicen que el equipo escribe; con número muestran botón.
-export const CONTACT_WHATSAPP = "";
+export const CONTACT_WHATSAPP = "+54 9 11 6169-3843";
 
 export function whatsappUrl(phone: string, text?: string): string {
   const digits = phone.replace(/\D/g, "");
