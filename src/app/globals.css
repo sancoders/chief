@@ -21,3 +21,23 @@ body {
   color: #292524;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+/* Movimiento sutil del fondo del hero (zoom lento tipo Ken Burns). */
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+.kenburns {
+  animation: kenburns 26s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns {
+    animation: none;
+  }
+}
