@@ -471,7 +471,7 @@ function AdminVerificationCard({
                 {ROLE_LABEL[person.role] ?? person.role}
               </span>
             </div>
-            <p className="text-sm text-stone-500">
+            <p className="break-words text-sm text-stone-500">
               {person.email} · {person.phone}
             </p>
             {person.dniNumber && (
@@ -508,28 +508,28 @@ function AdminVerificationCard({
       )}
 
       {status === "EN_REVISION" && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <form action={resolveVerification}>
             <input type="hidden" name="userId" value={person.id} />
             <input type="hidden" name="decision" value="ENTREVISTA" />
             <button
               type="submit"
-              className="rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800"
+              className="w-full rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800 sm:w-auto"
             >
               Aprobar docs → charla
             </button>
           </form>
-          <form action={resolveVerification} className="flex flex-1 gap-2">
+          <form action={resolveVerification} className="flex w-full gap-2 sm:flex-1">
             <input type="hidden" name="userId" value={person.id} />
             <input type="hidden" name="decision" value="RECHAZADA" />
             <input
               name="note"
               placeholder="Motivo del rechazo"
-              className="h-11 min-w-40 flex-1 rounded-xl border border-stone-300 px-3 text-base"
+              className="h-11 min-w-0 flex-1 rounded-xl border border-stone-300 px-3 text-base"
             />
             <button
               type="submit"
-              className="rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50"
+              className="shrink-0 rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50"
             >
               Rechazar
             </button>
@@ -537,11 +537,11 @@ function AdminVerificationCard({
         </div>
       )}
       {status === "ENTREVISTA" && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <a
             href={whatsappUrl(person.phone, "¡Hola! Soy del equipo de Caseras: tus documentos ya están aprobados 🎉 ¿Cuándo te queda cómodo una videollamada de 10 minutos para conocernos?")}
             target="_blank"
-            className="rounded-xl border border-emerald-300 px-4 py-2.5 text-base font-medium text-emerald-700 hover:bg-emerald-50"
+            className="rounded-xl border border-emerald-300 px-4 py-2.5 text-center text-base font-medium text-emerald-700 hover:bg-emerald-50"
           >
             Coordinar por WhatsApp
           </a>
@@ -550,7 +550,7 @@ function AdminVerificationCard({
             <input type="hidden" name="decision" value="VERIFICADA" />
             <button
               type="submit"
-              className="rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800"
+              className="w-full rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800 sm:w-auto"
             >
               Charla hecha, verificar ✓
             </button>
@@ -561,7 +561,7 @@ function AdminVerificationCard({
             <input type="hidden" name="note" value="No superó la charla de bienvenida" />
             <button
               type="submit"
-              className="rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50"
+              className="w-full rounded-xl border border-rose-300 px-4 py-2.5 text-base font-medium text-rose-600 hover:bg-rose-50 sm:w-auto"
             >
               Rechazar
             </button>
