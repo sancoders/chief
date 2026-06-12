@@ -4,10 +4,8 @@ import { Foto } from "@/components/foto";
 import { getSession } from "@/lib/auth";
 
 // ── Assets de marketing ──────────────────────────────────────────────
-// Para sumar un video de fondo al hero (p. ej. generado con IA): poné el
-// archivo en public/ y seteá HERO_VIDEO = "/hero.mp4" (loop corto, sin
-// audio). La sección de confianza usa FEATURE_IMAGE.
-const HERO_VIDEO = "";
+// La sección de confianza usa FEATURE_IMAGE; para reemplazarla por arte
+// propio, poné el archivo en public/ y apuntá acá (p. ej. "/cocina.jpg").
 const FEATURE_IMAGE =
   "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=70";
 
@@ -67,43 +65,22 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero: caras reales con nombre, la promesa de la marca */}
-      <section className="relative isolate overflow-hidden bg-emerald-950">
-        {HERO_VIDEO && (
-          <>
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              src={HERO_VIDEO}
-              className="absolute inset-0 -z-20 h-full w-full object-cover"
-            />
-            <div
-              aria-hidden
-              className="absolute inset-0 -z-10 bg-gradient-to-t from-emerald-950/95 via-emerald-950/70 to-emerald-900/40"
-            />
-          </>
-        )}
-        {/* Brillos suaves de fondo */}
+      {/* Hero claro: una sola paleta (texto stone + acento esmeralda) */}
+      <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="absolute -top-24 right-[-10%] -z-10 h-96 w-96 rounded-full bg-orange-400/15 blur-3xl"
+          className="absolute -top-28 right-[-15%] -z-10 h-96 w-96 rounded-full bg-emerald-200/50 blur-3xl"
         />
-        <div
-          aria-hidden
-          className="absolute bottom-[-20%] left-[-10%] -z-10 h-96 w-96 rounded-full bg-emerald-500/15 blur-3xl"
-        />
-        <div className="mx-auto grid min-h-[72vh] max-w-6xl items-center gap-12 px-4 pb-14 pt-24 sm:pb-16 md:grid-cols-[1.1fr_1fr]">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-10 sm:pt-16 md:grid-cols-[1.1fr_1fr]">
           <div>
-            <p className="inline-block rounded-full bg-emerald-400/15 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-emerald-200">
+            <p className="inline-block rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-emerald-800">
               Comunidad 100% verificada
             </p>
-            <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl">
+            <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-6xl">
               La ayuda para tu casa,{" "}
-              <span className="text-orange-300">con nombre y cara</span>
+              <span className="text-emerald-700">con nombre y cara</span>
             </h1>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-emerald-50/90">
+            <p className="mt-4 max-w-xl text-lg leading-relaxed text-stone-600">
               Trabajadoras con DNI verificado, foto real y reseñas de familias
               como la tuya.
             </p>
@@ -112,13 +89,13 @@ export default async function HomePage() {
                 <>
                   <Link
                     href="/registro"
-                    className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
+                    className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
                   >
                     Buscar ayuda
                   </Link>
                   <Link
                     href="/registro?rol=trabajadora"
-                    className="rounded-2xl border-2 border-white/70 px-7 py-4 text-center text-lg font-bold text-white transition hover:bg-white/10"
+                    className="rounded-2xl border border-stone-300 bg-white px-7 py-4 text-center text-lg font-bold text-stone-700 transition hover:border-emerald-600 hover:text-emerald-800"
                   >
                     Quiero trabajar
                   </Link>
@@ -126,13 +103,13 @@ export default async function HomePage() {
               ) : (
                 <Link
                   href={isWorker ? "/panel" : "/trabajadoras"}
-                  className="rounded-2xl bg-white px-7 py-4 text-center text-lg font-bold text-emerald-900 shadow-lg transition hover:bg-emerald-50"
+                  className="rounded-2xl bg-emerald-700 px-7 py-4 text-center text-lg font-bold text-white shadow-md transition hover:bg-emerald-800"
                 >
                   {isWorker ? "Ver mis solicitudes" : "Buscar trabajadoras"}
                 </Link>
               )}
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-1.5 text-sm font-medium text-emerald-100/80">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-1.5 text-sm font-medium text-stone-500">
               <span>✓ DNI verificado</span>
               <span>✓ Dirección validada</span>
               <span>✓ Reseñas reales</span>
@@ -144,7 +121,7 @@ export default async function HomePage() {
               {PEOPLE.map((person) => (
                 <div key={person.name} className={person.tilt}>
                   <div
-                    className={`floaty ${person.floatDelay} w-32 rounded-2xl bg-white p-2 shadow-2xl sm:w-40`}
+                    className={`floaty ${person.floatDelay} w-32 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-stone-900/5 sm:w-40`}
                   >
                     <Foto
                       src={person.src}
@@ -156,7 +133,7 @@ export default async function HomePage() {
                         <span className="text-sm font-bold text-stone-900">
                           {person.name}
                         </span>
-                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
                           ✓ Verificada
                         </span>
                       </div>
@@ -194,25 +171,25 @@ export default async function HomePage() {
 
       {/* Confianza, con foto */}
       <section className="mx-auto max-w-6xl px-4 pb-14">
-        <div className="overflow-hidden rounded-3xl bg-emerald-900 shadow-sm">
+        <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
           <div className="grid md:grid-cols-2">
             <div
               aria-hidden
-              className="min-h-56 bg-emerald-800 bg-cover bg-center md:min-h-full"
+              className="min-h-56 bg-stone-200 bg-cover bg-center md:min-h-full"
               style={{ backgroundImage: `url(${FEATURE_IMAGE})` }}
             />
             <div className="p-8 sm:p-10">
-              <h2 className="text-3xl font-extrabold tracking-tight text-white">
+              <h2 className="text-3xl font-extrabold tracking-tight text-stone-900">
                 La confianza se gana
               </h2>
-              <p className="mt-3 text-lg leading-relaxed text-emerald-100">
+              <p className="mt-3 text-lg leading-relaxed text-stone-600">
                 Solo personas con identidad verificada pueden ver y contactar
                 perfiles. Sin curiosos ni anónimos. Y a cada persona que entra
                 la recibimos con una charla de bienvenida.
               </p>
               <Link
                 href={mainHref}
-                className="mt-6 inline-block rounded-2xl bg-white px-7 py-4 text-lg font-bold text-emerald-900 transition hover:bg-emerald-50"
+                className="mt-6 inline-block rounded-2xl bg-emerald-700 px-7 py-4 text-lg font-bold text-white transition hover:bg-emerald-800"
               >
                 {!session
                   ? "Sumarme y verificarme"
@@ -228,7 +205,7 @@ export default async function HomePage() {
       {/* Para trabajadoras: solo visitas sin cuenta */}
       {!session && (
         <section className="mx-auto max-w-6xl px-4 pb-14">
-          <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-orange-200 bg-orange-50 p-6 sm:flex-row sm:items-center sm:p-8">
+          <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-stone-200 bg-white p-6 sm:flex-row sm:items-center sm:p-8">
             <div>
               <h2 className="text-xl font-extrabold tracking-tight text-stone-900">
                 ¿Trabajás en casas particulares?
@@ -239,7 +216,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/registro?rol=trabajadora"
-              className="shrink-0 rounded-2xl bg-orange-700 px-6 py-3.5 text-base font-bold text-white transition hover:bg-orange-800"
+              className="shrink-0 rounded-2xl bg-emerald-700 px-6 py-3.5 text-base font-bold text-white transition hover:bg-emerald-800"
             >
               Crear mi perfil gratis
             </Link>
