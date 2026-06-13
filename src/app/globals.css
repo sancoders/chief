@@ -20,6 +20,35 @@ body {
   background: #faf6f0;
   color: #292524;
   font-family: var(--font-app), system-ui, sans-serif;
+  /* Nada puede empujar la página hacia los costados. */
+  overflow-x: clip;
+}
+
+/* Pasos de la landing: aparecen acompañando el scroll (si el navegador
+   soporta animaciones scroll-driven; si no, quedan estáticos). */
+@supports (animation-timeline: view()) {
+  .step-reveal {
+    animation: step-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0.2;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-reveal {
+    animation: none;
+  }
 }
 
 /* Flotación sutil de las tarjetas del hero. */

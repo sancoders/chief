@@ -132,12 +132,12 @@ export default async function HomePage() {
             </div>
           </div>
           {/* Tarjetas de la comunidad */}
-          <div className="flex items-center justify-center pb-2">
-            <div className="flex -space-x-7 sm:-space-x-5">
+          <div className="flex min-w-0 items-center justify-center pb-2">
+            <div className="flex -space-x-8 sm:-space-x-5">
               {PEOPLE.map((person) => (
                 <div key={person.name} className={person.tilt}>
                   <div
-                    className={`floaty ${person.floatDelay} w-32 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-stone-900/5 sm:w-40`}
+                    className={`floaty ${person.floatDelay} w-28 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-stone-900/5 sm:w-40`}
                   >
                     <Foto
                       src={person.src}
@@ -150,10 +150,10 @@ export default async function HomePage() {
                           {person.name}
                         </span>
                         <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                          ✓ Verificada
+                          ✓<span className="hidden sm:inline"> Verificada</span>
                         </span>
                       </div>
-                      <p className="mt-0.5 text-xs text-stone-500">
+                      <p className="mt-0.5 truncate text-xs text-stone-500">
                         {person.service} · {person.zone} · ★ {person.rating}
                       </p>
                     </div>
@@ -165,21 +165,31 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Cómo funciona */}
-      <section className="mx-auto max-w-5xl px-4 py-14">
+      {/* Cómo funciona: línea de tiempo conectada que aparece al scrollear */}
+      <section className="mx-auto max-w-2xl px-4 py-14">
         <h2 className="text-center text-3xl font-extrabold tracking-tight text-stone-900">
           Así de simple
         </h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-3">
+        <div className="mt-10">
           {STEPS.map((step, index) => (
-            <div key={step.title} className="rounded-2xl border border-stone-200 bg-white p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-lg font-extrabold text-white">
-                {index + 1}
+            <div key={step.title} className="step-reveal grid grid-cols-[auto_1fr] gap-x-5">
+              <div className="flex flex-col items-center">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-lg font-extrabold text-white shadow-md">
+                  {index + 1}
+                </div>
+                {index < STEPS.length - 1 && (
+                  <div
+                    aria-hidden
+                    className="w-0.5 flex-1 rounded bg-gradient-to-b from-emerald-600 via-emerald-300 to-emerald-600"
+                  />
+                )}
               </div>
-              <h3 className="mt-3 text-lg font-bold text-stone-900">{step.title}</h3>
-              <p className="mt-1 text-base leading-relaxed text-stone-600">
-                {step.description}
-              </p>
+              <div className={index < STEPS.length - 1 ? "pb-10" : ""}>
+                <h3 className="pt-2.5 text-xl font-bold text-stone-900">{step.title}</h3>
+                <p className="mt-1.5 text-base leading-relaxed text-stone-600">
+                  {step.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>
