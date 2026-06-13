@@ -8,8 +8,20 @@ import type { Role } from "./constants";
 const COOKIE_NAME = "caseras_session";
 const SESSION_DAYS = 30;
 
+const DEV_SECRET = "dev-secret-cambiar-en-produccion";
+
 function getSecret(): Uint8Array {
-  const secret = process.env.AUTH_SECRET ?? "dev-secret-cambiar-en-produccion";
+  const secret = process.env.AUTH_SECRET;
+  // Falla cerrado: en producción NUNCA usar el secreto de desarrollo, porque
+  // cualquiera podría forjar una sesión (el valor está público en el repo).
+  if (!secret || secret === DEV_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "AUTH_SECRET no está configurado: la app no arranca sesiones en producción sin un secreto propio.",
+      );
+    }
+    return new TextEncoder().encode(DEV_SECRET);
+  }
   return new TextEncoder().encode(secret);
 }
 
