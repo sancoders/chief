@@ -171,6 +171,35 @@ await page.goto(`${BASE}/perfil`);
 await page.waitForLoadState("networkidle");
 await page.screenshot({ path: `${SHOTS}/12-perfil.png`, fullPage: true });
 ok("cerrar sesión al fondo", await page.isVisible("text=Cerrar sesión"));
+ok("borrar cuenta en perfil", await page.isVisible("text=Eliminar mi cuenta"));
+
+// 8b. Páginas legales (requisito legal y de Play Store)
+await page.goto(`${BASE}/privacidad`);
+ok("privacidad carga", await page.isVisible("text=Política de privacidad"));
+await page.goto(`${BASE}/terminos`);
+ok("términos carga", await page.isVisible("text=Términos y condiciones"));
+await logout(page);
+
+// 8c. Borrado de cuenta: usuario descartable se registra y se elimina
+await page.goto(`${BASE}/registro`);
+const throwaway = `borrar+${Date.now()}@demo.caseras.ar`;
+await page.fill("#name", "Cuenta Descartable");
+await page.fill("#email", throwaway);
+await page.fill("#phone", "+54 9 11 4444-0000");
+await page.fill("#password", "demo1234");
+await page.click('button[type="submit"]');
+await page.waitForURL("**/verificacion**", { timeout: 15000 });
+await page.goto(`${BASE}/perfil`);
+await page.click("text=Eliminar mi cuenta");
+await page.click("text=Sí, eliminar");
+await page.waitForURL(BASE + "/", { timeout: 15000 });
+// La cuenta ya no existe: el login debe fallar.
+await page.goto(`${BASE}/ingresar`);
+await page.fill("#email", throwaway);
+await page.fill("#password", "demo1234");
+await page.click('button[type="submit"]');
+await page.waitForTimeout(1000);
+ok("cuenta eliminada no puede entrar", await page.isVisible("text=incorrectos"));
 
 // 9. PWA: manifest linkeado, service worker activo y fallback offline
 ok("link rel=manifest", (await page.locator('link[rel="manifest"]').count()) > 0);

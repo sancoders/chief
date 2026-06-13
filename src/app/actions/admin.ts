@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
+import { deleteUpload } from "@/lib/uploads";
 
 /**
  * Resuelve una verificación de identidad (de cliente o trabajadora).
@@ -18,12 +19,28 @@ export async function resolveVerification(formData: FormData): Promise<void> {
 
   if (!["ENTREVISTA", "VERIFICADA", "RECHAZADA", "SIN_DOCS"].includes(decision)) return;
 
+  // Minimización de datos: al verificar, las imágenes de DNI y selfie ya
+  // cumplieron su función. Las borramos del storage y guardamos solo el ✓
+  // y el número de DNI — así una eventual brecha no expone documentos.
+  let docCleanup: Record<string, null> = {};
+  if (decision === "VERIFICADA") {
+    const u = await db.user.findUnique({
+      where: { id: userId },
+      select: { docFront: true, docBack: true, selfie: true },
+    });
+    for (const f of [u?.docFront, u?.docBack, u?.selfie]) {
+      if (f && !f.startsWith("http")) await deleteUpload(f).catch(() => {});
+    }
+    docCleanup = { docFront: null, docBack: null, selfie: null };
+  }
+
   await db.user.update({
     where: { id: userId },
     data: {
       verificationStatus: decision,
       verifiedAt: decision === "VERIFICADA" ? new Date() : null,
       verificationNote: decision === "RECHAZADA" ? note : "",
+      ...docCleanup,
     },
   });
 

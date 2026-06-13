@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { Avatar } from "@/components/ui";
-import { LogoutButton } from "@/components/nav";
+import { LogoutButton, DeleteAccountButton } from "@/components/nav";
 import { VERIFICATION_STATUSES, type VerificationStatus } from "@/lib/constants";
 
 export const metadata = { title: "Mi perfil" };
@@ -101,6 +101,22 @@ export default async function ProfilePage() {
       <div className="mt-8">
         <LogoutButton />
       </div>
+
+      <div className="mt-6 flex justify-center gap-4 text-sm text-stone-400">
+        <Link href="/privacidad" className="hover:text-stone-600">
+          Privacidad
+        </Link>
+        <span aria-hidden>·</span>
+        <Link href="/terminos" className="hover:text-stone-600">
+          Términos
+        </Link>
+      </div>
+
+      {user.role !== "ADMIN" && (
+        <div className="mt-4">
+          <DeleteAccountButton />
+        </div>
+      )}
     </div>
   );
 }
