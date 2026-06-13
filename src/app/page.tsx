@@ -8,9 +8,8 @@ import { getSession } from "@/lib/auth";
 // muestra mientras carga o si el navegador bloquea el autoplay (vacío =
 // fondo verde liso). FEATURE_IMAGE: foto de la sección de confianza.
 const HERO_VIDEO = "/hero.mp4";
-const HERO_POSTER = "/hero-poster.jpg";
-const FEATURE_IMAGE =
-  "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=70";
+const HERO_POSTER = "/limpieza.jpg";
+const FEATURE_IMAGE = "/cocina.jpg";
 
 // Tarjetas ilustrativas del hero: caras reales con nombre, como se ven los
 // perfiles adentro. Retratos de demostración (fallback local en public/demo).
@@ -215,7 +214,7 @@ export default async function HomePage() {
               </p>
               <Link
                 href={mainHref}
-                className="mt-6 inline-block rounded-2xl bg-emerald-700 px-7 py-4 text-lg font-bold text-white transition hover:bg-emerald-800"
+                className="mt-6 block w-full rounded-2xl bg-emerald-700 px-6 py-4 text-center text-lg font-bold text-white transition hover:bg-emerald-800 sm:inline-block sm:w-auto"
               >
                 {!session
                   ? "Sumarme y verificarme"
@@ -242,7 +241,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/registro?rol=trabajadora"
-              className="shrink-0 rounded-2xl bg-emerald-700 px-6 py-3.5 text-base font-bold text-white transition hover:bg-emerald-800"
+              className="block w-full shrink-0 rounded-2xl bg-emerald-700 px-6 py-3.5 text-center text-base font-bold text-white transition hover:bg-emerald-800 sm:w-auto"
             >
               Crear mi perfil gratis
             </Link>
