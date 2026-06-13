@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/app/actions/auth";
+import { deleteAccount } from "@/app/actions/account";
 import type { Session } from "@/lib/auth";
 
 type Tab = { href: string; label: string; icon: keyof typeof ICONS };
@@ -267,6 +268,50 @@ export function LogoutButton() {
       >
         No
       </button>
+    </div>
+  );
+}
+
+/** Borrado de cuenta con confirmación. Acción irreversible. */
+export function DeleteAccountButton() {
+  const [confirming, setConfirming] = useState(false);
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="w-full px-4 py-3 text-center text-sm font-medium text-stone-400 hover:text-rose-600"
+      >
+        Eliminar mi cuenta
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+      <p className="text-base font-semibold text-rose-800">
+        ¿Eliminar tu cuenta para siempre?
+      </p>
+      <p className="mt-1 text-sm text-rose-700">
+        Se borran tus datos, reservas y documentos. No se puede deshacer.
+      </p>
+      <div className="mt-3 flex items-center gap-3">
+        <form action={deleteAccount}>
+          <button
+            type="submit"
+            className="rounded-xl bg-rose-600 px-5 py-2.5 text-base font-semibold text-white hover:bg-rose-700"
+          >
+            Sí, eliminar
+          </button>
+        </form>
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          className="rounded-xl border border-stone-300 bg-white px-5 py-2.5 text-base font-medium text-stone-600"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 
 // Almacenamiento de fotos subidas (perfil, DNI, selfies).
 // Con SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY usa Supabase Storage
@@ -36,6 +36,21 @@ export async function saveUpload(
   }
   await mkdir(UPLOADS_DIR, { recursive: true });
   await writeFile(path.join(UPLOADS_DIR, name), data);
+}
+
+export async function deleteUpload(name: string): Promise<void> {
+  if (supabaseUrl && serviceKey) {
+    await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${name}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${serviceKey}` },
+    });
+    return;
+  }
+  try {
+    await unlink(path.join(UPLOADS_DIR, name));
+  } catch {
+    // Ya no existe: nada que borrar.
+  }
 }
 
 export async function readUpload(name: string): Promise<Buffer | null> {

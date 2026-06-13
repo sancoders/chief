@@ -47,8 +47,11 @@ export function Footer() {
           <Link href="/trabajadoras" className="hover:text-stone-700">
             Buscar ayuda
           </Link>
-          <Link href="/registro?rol=trabajadora" className="hover:text-stone-700">
-            Trabajá con nosotras
+          <Link href="/privacidad" className="hover:text-stone-700">
+            Privacidad
+          </Link>
+          <Link href="/terminos" className="hover:text-stone-700">
+            Términos
           </Link>
         </div>
       </div>
