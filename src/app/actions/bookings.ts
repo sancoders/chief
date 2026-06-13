@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
+import { notifyUser } from "@/lib/push";
 import {
   ZONES,
   calcFee,
@@ -114,6 +115,12 @@ export async function createBooking(
     },
   });
 
+  await notifyUser(
+    worker.userId,
+    "Nueva solicitud de reserva",
+    `${session.name} te envió una solicitud. Entrá para responder.`,
+  );
+
   redirect(`/panel?reserva=${booking.id}`);
 }
 
@@ -146,5 +153,21 @@ export async function updateBookingStatus(formData: FormData): Promise<void> {
   if (!isOwner) return;
 
   await db.booking.update({ where: { id: bookingId }, data: { status } });
+
+  // Aviso a la otra parte según quién hizo el cambio.
+  if (status === "ACEPTADA") {
+    await notifyUser(
+      booking.clientId,
+      "¡Tu solicitud fue aceptada!",
+      "Ya podés ver el teléfono para coordinar el trabajo.",
+    );
+  } else if (status === "RECHAZADA") {
+    await notifyUser(booking.clientId, "Solicitud rechazada", "Tu solicitud no fue aceptada esta vez.");
+  } else if (status === "COMPLETADA") {
+    await notifyUser(booking.clientId, "Trabajo completado", "Contanos cómo fue: dejá tu reseña.");
+  } else if (status === "CANCELADA") {
+    await notifyUser(booking.worker.userId, "Reserva cancelada", "Una reserva fue cancelada.");
+  }
+
   revalidatePath("/panel");
 }
