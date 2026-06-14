@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { VerificationForm } from "@/components/forms";
+import { PushPrompt } from "@/components/push-toggle";
 import { CONTACT_WHATSAPP, whatsappUrl } from "@/lib/constants";
 
 export const metadata = { title: "Verificación de identidad" };
@@ -17,6 +18,7 @@ export default async function VerificationPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <PushPrompt reason="Activá las notificaciones y te avisamos apenas aprobemos tu identidad." />
       <h1 className="text-3xl font-extrabold tracking-tight text-stone-900">
         Verificá tu identidad
       </h1>
