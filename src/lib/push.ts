@@ -34,6 +34,9 @@ export async function notifyUser(
         const r = await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           JSON.stringify({ title, body, url, icon: "/icon-192.png" }),
+          // urgency alta: despierta dispositivos en ahorro de batería (Doze).
+          // TTL 24h: si está offline, el push espera y llega al reconectar.
+          { urgency: "high", TTL: 86400 },
         );
         statuses.push(r.statusCode);
       } catch (err: unknown) {
