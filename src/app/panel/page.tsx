@@ -6,7 +6,7 @@ import { updateBookingStatus } from "@/app/actions/bookings";
 import { resolveVerification } from "@/app/actions/admin";
 import { Avatar, StatusBadge } from "@/components/ui";
 import { ReviewForm } from "@/components/forms";
-import { PushToggle } from "@/components/push-toggle";
+import { PushPrompt } from "@/components/push-toggle";
 import {
   BOOKING_TYPES,
   CONTACT_WHATSAPP,
@@ -656,7 +656,9 @@ export default async function PanelPage({
         </div>
       )}
       <div className="mt-4">
-        {user.role !== "ADMIN" && <PushToggle />}
+        {user.role !== "ADMIN" && (
+          <PushPrompt reason="Te avisamos al instante cuando llega o cambia una reserva." />
+        )}
         {user.role === "CLIENT" && (await ClientPanel(user, reserva))}
         {user.role === "WORKER" && (await WorkerPanel(user))}
         {user.role === "ADMIN" && (await AdminPanel())}

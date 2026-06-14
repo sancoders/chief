@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { subscribeUser, unsubscribeUser } from "@/app/actions/push";
 
 // Convierte la clave pública VAPID (base64url) al formato que pide el navegador.
@@ -13,36 +13,63 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
-type State = "loading" | "hidden" | "off" | "on" | "busy";
+type State = "loading" | "hidden" | "prompt" | "busy" | "on";
 
-export function PushToggle() {
+// Aviso de notificaciones que se muestra solo (no hay que buscar un botón):
+// aparece apenas la persona puede activar, con un motivo según el contexto.
+export function PushPrompt({
+  reason = "Activá los avisos para no perderte ninguna novedad.",
+}: {
+  reason?: string;
+}) {
   const [state, setState] = useState<State>("loading");
   const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
+  const saveSubscription = useCallback(async () => {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    const sub =
+      existing ??
+      (await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key!),
+      }));
+    await subscribeUser(JSON.parse(JSON.stringify(sub)));
+  }, [key]);
+
   useEffect(() => {
-    if (!key || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    if (
+      !key ||
+      typeof Notification === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window)
+    ) {
       setState("hidden");
       return;
     }
-    navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => setState(sub ? "on" : "off"))
-      .catch(() => setState("hidden"));
-  }, [key]);
+    if (Notification.permission === "denied") {
+      setState("hidden");
+      return;
+    }
+    if (Notification.permission === "granted") {
+      // Ya dio permiso antes: nos aseguramos de tener la suscripción guardada.
+      saveSubscription()
+        .then(() => setState("on"))
+        .catch(() => setState("hidden"));
+      return;
+    }
+    setState("prompt");
+  }, [key, saveSubscription]);
 
   async function enable() {
     setState("busy");
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key!),
-      });
-      await subscribeUser(JSON.parse(JSON.stringify(sub)));
+      // subscribe() dispara el pedido de permiso del navegador si hace falta.
+      await saveSubscription();
       setState("on");
     } catch {
-      // Permiso denegado o error: volvemos al estado apagado.
-      setState("off");
+      // Permiso denegado o no soportado: ocultamos sin molestar.
+      setState("hidden");
     }
   }
 
@@ -56,7 +83,7 @@ export function PushToggle() {
         await sub.unsubscribe();
       }
     } finally {
-      setState("off");
+      setState("hidden");
     }
   }
 
@@ -65,9 +92,7 @@ export function PushToggle() {
   if (state === "on") {
     return (
       <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-        <span className="text-base text-emerald-800">
-          🔔 Avisos activados — te notificamos las novedades de tus reservas.
-        </span>
+        <span className="text-base text-emerald-800">🔔 Avisos activados.</span>
         <button
           type="button"
           onClick={disable}
@@ -79,19 +104,28 @@ export function PushToggle() {
     );
   }
 
+  // prompt / busy: tarjeta prominente que aparece sola.
   return (
-    <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <span className="text-base text-stone-700">
-        🔔 Activá los avisos para enterarte al instante de solicitudes y respuestas.
-      </span>
-      <button
-        type="button"
-        onClick={enable}
-        disabled={state === "busy"}
-        className="shrink-0 rounded-xl bg-emerald-700 px-5 py-2.5 text-base font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
-      >
-        {state === "busy" ? "Activando…" : "Activar avisos"}
-      </button>
+    <div className="mb-4 rounded-2xl border border-emerald-300 bg-emerald-50 p-5">
+      <p className="text-lg font-bold text-emerald-900">🔔 Activá las notificaciones</p>
+      <p className="mt-1 text-base text-emerald-800">{reason}</p>
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={enable}
+          disabled={state === "busy"}
+          className="rounded-xl bg-emerald-700 px-6 py-3 text-base font-bold text-white hover:bg-emerald-800 disabled:opacity-60"
+        >
+          {state === "busy" ? "Activando…" : "Activar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setState("hidden")}
+          className="text-base font-medium text-emerald-700 hover:underline"
+        >
+          Ahora no
+        </button>
+      </div>
     </div>
   );
 }

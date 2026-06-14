@@ -22,8 +22,12 @@ export async function notifyUser(
   body: string,
   url = "/panel",
 ): Promise<void> {
-  if (!configured) return;
+  if (!configured) {
+    console.warn("[push] inactivo: falta NEXT_PUBLIC_VAPID_PUBLIC_KEY o VAPID_PRIVATE_KEY en el entorno");
+    return;
+  }
   const subs = await db.pushSubscription.findMany({ where: { userId } });
+  console.log(`[push] enviando a ${subs.length} suscripción(es) de ${userId}`);
   await Promise.all(
     subs.map(async (s) => {
       try {
@@ -32,8 +36,9 @@ export async function notifyUser(
           JSON.stringify({ title, body, url, icon: "/icon-192.png" }),
         );
       } catch (err: unknown) {
-        // 404/410 = suscripción vencida: la limpiamos para no reintentar.
         const code = (err as { statusCode?: number })?.statusCode;
+        console.warn(`[push] fallo envío (status ${code ?? "?"})`);
+        // 404/410 = suscripción vencida: la limpiamos para no reintentar.
         if (code === 404 || code === 410) {
           await db.pushSubscription.delete({ where: { id: s.id } }).catch(() => {});
         }
