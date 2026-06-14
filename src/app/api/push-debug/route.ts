@@ -27,9 +27,8 @@ export async function GET(request: Request) {
       select: { id: true, role: true },
     });
     if (!user) return NextResponse.json({ error: "usuario no encontrado", notifyEmail });
-    const subscriptionsForUser = await db.pushSubscription.count({ where: { userId: user.id } });
-    await notifyUser(user.id, "Prueba de reserva", "Simulación de aviso de reserva 🧪");
-    return NextResponse.json({ notifyEmail, role: user.role, subscriptionsForUser });
+    const result = await notifyUser(user.id, "Prueba de reserva", "Simulación de aviso de reserva 🧪");
+    return NextResponse.json({ notifyEmail, role: user.role, ...result });
   }
 
   const subs = await db.pushSubscription.findMany({

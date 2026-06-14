@@ -1,6 +1,6 @@
 // Service worker de Caseras: fallback offline y notificaciones push.
 // Subí la versión del caché cuando cambien los assets precacheados.
-const CACHE = "caseras-v2";
+const CACHE = "caseras-v3";
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
@@ -36,6 +36,11 @@ self.addEventListener("push", (event) => {
       icon: new URL(data.icon || "/icon-192.png", origin).href,
       badge: new URL("/icon-192.png", origin).href,
       data: { url: data.url || "/panel" },
+      // Que aparezca destacada y persista aunque la app esté cerrada.
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      tag: "caseras",
+      renotify: true,
     }),
   );
 });

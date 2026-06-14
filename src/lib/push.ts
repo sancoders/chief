@@ -21,23 +21,24 @@ export async function notifyUser(
   title: string,
   body: string,
   url = "/panel",
-): Promise<void> {
+): Promise<{ configured: boolean; count: number; statuses: Array<number | string> }> {
   if (!configured) {
-    console.warn("[push] inactivo: falta NEXT_PUBLIC_VAPID_PUBLIC_KEY o VAPID_PRIVATE_KEY en el entorno");
-    return;
+    console.warn("[push] inactivo: falta NEXT_PUBLIC_VAPID_PUBLIC_KEY o VAPID_PRIVATE_KEY");
+    return { configured: false, count: 0, statuses: [] };
   }
   const subs = await db.pushSubscription.findMany({ where: { userId } });
-  console.log(`[push] enviando a ${subs.length} suscripción(es) de ${userId}`);
+  const statuses: Array<number | string> = [];
   await Promise.all(
     subs.map(async (s) => {
       try {
-        await webpush.sendNotification(
+        const r = await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           JSON.stringify({ title, body, url, icon: "/icon-192.png" }),
         );
+        statuses.push(r.statusCode);
       } catch (err: unknown) {
         const code = (err as { statusCode?: number })?.statusCode;
-        console.warn(`[push] fallo envío (status ${code ?? "?"})`);
+        statuses.push(code ?? "error");
         // 404/410 = suscripción vencida: la limpiamos para no reintentar.
         if (code === 404 || code === 410) {
           await db.pushSubscription.delete({ where: { id: s.id } }).catch(() => {});
@@ -45,4 +46,5 @@ export async function notifyUser(
       }
     }),
   );
+  return { configured: true, count: subs.length, statuses };
 }
