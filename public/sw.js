@@ -1,6 +1,6 @@
 // Service worker de Caseras: fallback offline y notificaciones push.
 // Subí la versión del caché cuando cambien los assets precacheados.
-const CACHE = "caseras-v1";
+const CACHE = "caseras-v2";
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
@@ -28,12 +28,14 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   const data = event.data.json();
+  // URLs absolutas: algunos Android no muestran el ícono con rutas relativas.
+  const origin = self.location.origin;
   event.waitUntil(
     self.registration.showNotification(data.title ?? "Caseras", {
       body: data.body,
-      icon: data.icon ?? "/icon-192.png",
-      badge: "/icon-192.png",
-      data: data.data,
+      icon: new URL(data.icon || "/icon-192.png", origin).href,
+      badge: new URL("/icon-192.png", origin).href,
+      data: { url: data.url || "/panel" },
     }),
   );
 });
