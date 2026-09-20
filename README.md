@@ -46,6 +46,10 @@ npm run db:seed   # carga datos de demostración
 npm run dev       # http://localhost:3000
 ```
 
+> Las fotos de las trabajadoras de demostración son **avatares generados** a
+> partir de las iniciales del nombre inventado. No son fotos de personas reales:
+> en producción cada persona sube la suya durante la verificación.
+
 > El plan gratis pausa el proyecto tras ~1 semana sin uso; se despierta con
 > un click en el dashboard ("Restore").
 

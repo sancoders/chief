@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Si la foto remota (demo) o subida no carga, cae a un retrato local.
-function fallbackFor(src: string): string {
-  const match = src.match(/women\/(\d+)\.jpg/);
-  return match ? `/demo/mujer-${match[1]}.jpg` : "/demo/mujer-44.jpg";
+import { generatedAvatar } from "@/lib/avatar";
+
+// Si la foto subida no carga, cae a un avatar generado con las iniciales
+// del nombre (el `alt`), no a un retrato de una persona real.
+function fallbackFor(alt: string): string {
+  return generatedAvatar(alt);
 }
 
 export function Foto({
@@ -21,7 +23,7 @@ export function Foto({
   const ref = useRef<HTMLImageElement>(null);
 
   function swap() {
-    const fallback = fallbackFor(src);
+    const fallback = fallbackFor(alt);
     setCurrent((value) => (value === fallback ? value : fallback));
   }
 

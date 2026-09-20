@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { APP_NAME } from "@/lib/constants";
 import { Foto } from "@/components/foto";
+import { generatedAvatar } from "@/lib/avatar";
 import { getSession } from "@/lib/auth";
 
 // ── Assets de marketing ──────────────────────────────────────────────
@@ -11,11 +12,12 @@ const HERO_VIDEO = "/hero.mp4";
 const HERO_POSTER = "/limpieza.jpg";
 const FEATURE_IMAGE = "/cocina.jpg";
 
-// Tarjetas ilustrativas del hero: caras reales con nombre, como se ven los
-// perfiles adentro. Retratos de demostración (fallback local en public/demo).
+// Tarjetas ilustrativas del hero: así se ven los perfiles adentro. Los
+// retratos son avatares GENERADOS con las iniciales del nombre inventado,
+// no fotos de personas reales.
 const PEOPLE = [
   {
-    src: "https://randomuser.me/api/portraits/women/65.jpg",
+    src: generatedAvatar("Rosa"),
     name: "Rosa",
     service: "Limpieza",
     zone: "Palermo",
@@ -24,7 +26,7 @@ const PEOPLE = [
     floatDelay: "",
   },
   {
-    src: "https://randomuser.me/api/portraits/women/44.jpg",
+    src: generatedAvatar("María"),
     name: "María",
     service: "Cocina",
     zone: "Belgrano",
@@ -33,7 +35,7 @@ const PEOPLE = [
     floatDelay: "floaty-d1",
   },
   {
-    src: "https://randomuser.me/api/portraits/women/68.jpg",
+    src: generatedAvatar("Norma"),
     name: "Norma",
     service: "Planchado",
     zone: "Caballito",

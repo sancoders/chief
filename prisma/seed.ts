@@ -7,16 +7,20 @@ const db = new PrismaClient();
 
 const PASSWORD = "demo1234";
 
-// Retratos de demostración (randomuser.me). En producción cada persona
-// sube su foto real en la verificación.
-const portrait = (n: number) => `https://randomuser.me/api/portraits/women/${n}.jpg`;
+// Avatares GENERADOS a partir de las iniciales del nombre inventado.
+// A propósito no son fotos de personas reales: este repo es público y las
+// trabajadoras del seed no existen. En producción cada persona sube su propia
+// foto durante la verificación.
+const portrait = (name: string) =>
+  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}` +
+  `&backgroundColor=047857,0f766e,7c3aed,b45309,be123c`;
 
 const WORKERS = [
   {
     name: "María Gómez",
     email: "maria@demo.caseras.ar",
     phone: "+54 9 11 5555-0101",
-    photo: portrait(65),
+    photo: portrait("María Gómez"),
     bio: "Hace 12 años trabajo en casas de Palermo y Belgrano. Soy muy detallista con la limpieza profunda y me encanta dejar la cocina impecable. Tengo referencias comprobables.",
     zones: ["Palermo", "Belgrano", "Colegiales"],
     services: ["limpieza", "profunda", "planchado"],
@@ -35,7 +39,7 @@ const WORKERS = [
     name: "Rosa Benítez",
     email: "rosa@demo.caseras.ar",
     phone: "+54 9 11 5555-0102",
-    photo: portrait(44),
+    photo: portrait("Rosa Benítez"),
     bio: "Trabajo por hora o mensual en zona norte. Cocino casero (¡mis tartas son famosas!) y tengo mucha experiencia cuidando adultos mayores con paciencia y cariño.",
     zones: ["Vicente López", "Olivos", "Núñez", "Belgrano"],
     services: ["limpieza", "cocina", "mayores"],
@@ -53,7 +57,7 @@ const WORKERS = [
     name: "Norma Acosta",
     email: "norma@demo.caseras.ar",
     phone: "+54 9 11 5555-0103",
-    photo: portrait(68),
+    photo: portrait("Norma Acosta"),
     bio: "Vivo en Caballito y trabajo en barrios cercanos. Rápida, ordenada y de palabra: si digo un horario, lo cumplo. Hago limpieza general y profunda de mudanzas.",
     zones: ["Caballito", "Almagro", "Villa Crespo", "Flores"],
     services: ["limpieza", "profunda"],
@@ -71,7 +75,7 @@ const WORKERS = [
     name: "Claudia Romero",
     email: "claudia@demo.caseras.ar",
     phone: "+54 9 11 5555-0104",
-    photo: portrait(47),
+    photo: portrait("Claudia Romero"),
     bio: "Niñera y ayuda doméstica con 10 años de experiencia y curso de primeros auxilios. Los chicos me adoran y las casas quedan en orden. Disponible por día o mensual.",
     zones: ["Recoleta", "Palermo", "Almagro"],
     services: ["ninos", "limpieza", "cocina"],
@@ -88,7 +92,7 @@ const WORKERS = [
     name: "Susana Ledesma",
     email: "susana@demo.caseras.ar",
     phone: "+54 9 11 5555-0105",
-    photo: portrait(57),
+    photo: portrait("Susana Ledesma"),
     bio: "Trabajo en zona oeste y sur. Especialista en planchado (camisas perfectas) y limpieza semanal de mantenimiento. Busco casas fijas por mes.",
     zones: ["Ramos Mejía", "Morón", "Lomas de Zamora", "Quilmes"],
     services: ["planchado", "limpieza"],
@@ -103,7 +107,7 @@ const WORKERS = [
     name: "Patricia Vega",
     email: "patricia@demo.caseras.ar",
     phone: "+54 9 11 5555-0106",
-    photo: portrait(26),
+    photo: portrait("Patricia Vega"),
     bio: "Recién me sumo a la plataforma. Tengo 5 años de experiencia en limpieza y cocina en San Isidro y Martínez, con referencias de las familias con las que trabajé.",
     zones: ["San Isidro", "Martínez", "Olivos"],
     services: ["limpieza", "cocina"],
@@ -117,6 +121,15 @@ const WORKERS = [
 ];
 
 async function main() {
+  // Este seed crea cuentas con una contraseña publicada en el repo, incluido un
+  // ADMIN. Corriéndolo contra una base real quedaría un administrador abierto.
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_PROD_SEED) {
+    throw new Error(
+      "Seed bloqueado: NODE_ENV=production. Son cuentas demo con contraseña pública. " +
+        "Si de verdad querés correrlo, setea ALLOW_PROD_SEED=1.",
+    );
+  }
+
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
   await db.user.upsert({
@@ -143,7 +156,7 @@ async function main() {
       name: "Julieta Pérez",
       phone: "+54 9 11 5555-0201",
       role: "CLIENT",
-      photo: portrait(12),
+      photo: portrait("Julieta Pérez"),
       verificationStatus: "VERIFICADA",
       dniNumber: "33222111",
       addressStreet: "Av. Santa Fe 3200, 4º B",
